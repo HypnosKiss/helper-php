@@ -1,0 +1,31 @@
+{
+  "name": "sweeper/helper-php",
+  "description": "helper class/function",
+  "type": "library",
+  "keywords": [
+    "helper",
+    "tool",
+    "php"
+  ],
+  "homepage": "https://github.com/HypnosKiss/helper-php/",
+  "license": "Apache-2.0",
+  "authors": [
+    {
+      "name": "sweeper",
+      "email": "wili.lixiang@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.2",
+    "ext-json": "*",
+    "sweeper/design-pattern": "^1.0",
+    "elasticsearch/elasticsearch": "7.11.0",
+    "predis/predis": "v2.x-dev"
+  },
+  "autoload": {
+    "psr-4": {
+      "Sweeper\\HelperPhp\\": "src/"
+    }
+  },
+  "minimum-stability": "dev"
+}
