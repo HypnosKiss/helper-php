@@ -1,6 +1,6 @@
 <?php
 
-namespace Sweeper\HelperPhp\Tool;
+namespace Sweeper\HelperPhp\Traits;
 
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
