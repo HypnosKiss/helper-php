@@ -9,8 +9,8 @@ use RecursiveIteratorIterator;
  * 文件监视器
  * Created by PhpStorm.
  * User: Sweeper
- * Time: 2023/8/27 23:43
- * @Path \Sweeper\HelperPhp\Tool\FileMonitor
+ * Time: 2023/9/8 18:08
+ * @Path \Sweeper\HelperPhp\Traits\FileMonitor
  */
 trait FileMonitor
 {

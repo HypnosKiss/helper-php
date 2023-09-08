@@ -88,7 +88,7 @@ class Elasticsearch
             return $this->client;
         }
         $options = array_replace($this->getConfig(), $options);
-        if (!$options['hosts']) {
+        if (empty($options['hosts'])) {
             throw new \InvalidArgumentException('ES 客户端初始化异常，没有找到可用的 host');
         }
 

@@ -1,19 +1,19 @@
 <?php
 
-namespace Sweeper\HelperPhp\Tool;
+namespace Sweeper\HelperPhp\Traits;
 
 use Throwable;
 
 use function Sweeper\HelperPhp\Func\var_export_min;
 
-define('E_FATAL', E_ERROR|E_USER_ERROR|E_CORE_ERROR|E_COMPILE_ERROR|E_RECOVERABLE_ERROR|E_PARSE);
+!defined('E_FATAL') && define('E_FATAL', E_ERROR|E_USER_ERROR|E_CORE_ERROR|E_COMPILE_ERROR|E_RECOVERABLE_ERROR|E_PARSE);
 
 /**
  * 通用异常处理
  * Created by PhpStorm.
  * User: Sweeper
  * Time: 2023/8/27 23:42
- * @Path \Sweeper\HelperPhp\Tool\ExceptionHandle
+ * @Path \Sweeper\HelperPhp\Traits\ExceptionHandle
  */
 trait ExceptionHandle
 {
