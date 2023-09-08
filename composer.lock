@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2c2848d8de101d93f355ac455021b740",
+    "content-hash": "e030b0e3b368c6599c3de5f5352d8581",
     "packages": [
         {
             "name": "elasticsearch/elasticsearch",
-            "version": "v7.11.0",
+            "version": "7.11.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/elastic/elasticsearch-php.git",
-                "reference": "277cd5e182827c59c23e146a836a30470c0f879d"
+                "reference": "8d08050fef9d89004702b1428b8c1f7f4f6162cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/277cd5e182827c59c23e146a836a30470c0f879d",
-                "reference": "277cd5e182827c59c23e146a836a30470c0f879d",
+                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/8d08050fef9d89004702b1428b8c1f7f4f6162cf",
+                "reference": "8d08050fef9d89004702b1428b8c1f7f4f6162cf",
                 "shasum": ""
             },
             "require": {
@@ -71,9 +71,9 @@
             ],
             "support": {
                 "issues": "https://github.com/elastic/elasticsearch-php/issues",
-                "source": "https://github.com/elastic/elasticsearch-php/tree/v7.11.0"
+                "source": "https://github.com/elastic/elasticsearch-php/tree/7.11"
             },
-            "time": "2021-02-11T11:04:51+00:00"
+            "time": "2021-02-11T08:44:13+00:00"
         },
         {
             "name": "ezimuel/guzzlestreams",
@@ -925,16 +925,16 @@
         },
         {
             "name": "predis/predis",
-            "version": "v2.x-dev",
+            "version": "v3.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/predis/predis.git",
-                "reference": "16bdd83d23b84a2182e129c63b1683a02c076556"
+                "reference": "2ae9af625cf3876947e7445dae676f7169d62bf8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/predis/predis/zipball/16bdd83d23b84a2182e129c63b1683a02c076556",
-                "reference": "16bdd83d23b84a2182e129c63b1683a02c076556",
+                "url": "https://api.github.com/repos/predis/predis/zipball/2ae9af625cf3876947e7445dae676f7169d62bf8",
+                "reference": "2ae9af625cf3876947e7445dae676f7169d62bf8",
                 "shasum": ""
             },
             "require": {
@@ -948,7 +948,6 @@
             "suggest": {
                 "ext-relay": "Faster connection with in-memory caching (>=0.6.2)"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -975,7 +974,7 @@
             ],
             "support": {
                 "issues": "https://github.com/predis/predis/issues",
-                "source": "https://github.com/predis/predis/tree/v2.x"
+                "source": "https://github.com/predis/predis/tree/v3.x"
             },
             "funding": [
                 {
@@ -983,7 +982,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-08-25T21:27:24+00:00"
+            "time": "2023-08-09T16:21:22+00:00"
         },
         {
             "name": "psr/http-client",
@@ -1435,15 +1434,15 @@
     "prefer-lowest": false,
     "platform": {
         "php": ">=7.2",
+        "ext-curl": "*",
         "ext-json": "*",
+        "ext-libxml": "*",
         "ext-mbstring": "*",
         "ext-openssl": "*",
-        "ext-libxml": "*",
-        "ext-simplexml": "*",
         "ext-pcntl": "*",
-        "ext-curl": "*",
-        "ext-zip": "*",
-        "ext-posix": "*"
+        "ext-posix": "*",
+        "ext-simplexml": "*",
+        "ext-zip": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.3.0"
