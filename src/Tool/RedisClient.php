@@ -6,7 +6,7 @@
 namespace Sweeper\HelperPhp\Tool;
 
 use Predis\Client;
-use Sweeper\DesignPattern\Traits\Multiton;
+use Sweeper\DesignPattern\Traits\MultiPattern;
 
 /**
  * predis 客户端
@@ -19,7 +19,7 @@ use Sweeper\DesignPattern\Traits\Multiton;
 class RedisClient
 {
 
-    use Multiton;
+    use MultiPattern;
 
     /** @var Client */
     private $client;

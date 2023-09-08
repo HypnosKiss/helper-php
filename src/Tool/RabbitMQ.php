@@ -11,7 +11,7 @@ use LogicException;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
-use Sweeper\DesignPattern\Traits\Multiton;
+use Sweeper\DesignPattern\Traits\MultiPattern;
 use Throwable;
 
 /**
@@ -74,7 +74,7 @@ use Throwable;
 class RabbitMQ
 {
 
-    use Multiton;
+    use MultiPattern;
 
     /** @var AMQPStreamConnection MQ 连接 */
     private $connection;

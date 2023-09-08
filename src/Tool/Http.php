@@ -246,7 +246,7 @@ class Http
      */
     public static function sendHttpStatus($code): bool
     {
-        $messages = self::STATUS_MESSAGE;
+        $messages = static::STATUS_MESSAGE;
         $message  = $messages[$code];
         if ($message && !headers_sent()) {
             $sapi_type = PHP_SAPI;

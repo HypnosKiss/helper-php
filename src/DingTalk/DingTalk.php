@@ -2,7 +2,7 @@
 
 namespace Sweeper\HelperPhp\DingTalk;
 
-use Sweeper\DesignPattern\Traits\Multiton;
+use Sweeper\DesignPattern\Traits\MultiPattern;
 
 use function Sweeper\HelperPhp\get_microtime;
 use function Sweeper\HelperPhp\str_to_utf8;
@@ -17,7 +17,7 @@ use function Sweeper\HelperPhp\str_to_utf8;
 class DingTalk
 {
 
-    use Multiton;
+    use MultiPattern;
 
     protected $url    = 'https://oapi.dingtalk.com/robot/send?access_token=xxx';
 

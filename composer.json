@@ -1,6 +1,6 @@
 {
     "name": "sweeper/helper-php",
-    "description": "helper class/function",
+    "description": "helper tool、function",
     "type": "library",
     "keywords": [
         "helper",

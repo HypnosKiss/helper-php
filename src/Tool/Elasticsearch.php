@@ -5,7 +5,7 @@ namespace Sweeper\HelperPhp\Tool;
 use BadMethodCallException;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
-use Sweeper\DesignPattern\Traits\Multiton;
+use Sweeper\DesignPattern\Traits\MultiPattern;
 
 /**
  * Elasticsearch 客户端封装
@@ -46,7 +46,7 @@ use Sweeper\DesignPattern\Traits\Multiton;
 class Elasticsearch
 {
 
-    use Multiton;
+    use MultiPattern;
 
     /** @var Client 客户端实例 */
     private $client;

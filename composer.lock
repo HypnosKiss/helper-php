@@ -1315,16 +1315,16 @@
         },
         {
             "name": "sweeper/design-pattern",
-            "version": "1.0.1.2",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/HypnosKiss/design-pattern.git",
-                "reference": "011e031ec0c151bc040ca469e2f3f0b86ddd34ee"
+                "reference": "489042186ff3ba95b4d3a14a66415e5279910a67"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/HypnosKiss/design-pattern/zipball/011e031ec0c151bc040ca469e2f3f0b86ddd34ee",
-                "reference": "011e031ec0c151bc040ca469e2f3f0b86ddd34ee",
+                "url": "https://api.github.com/repos/HypnosKiss/design-pattern/zipball/489042186ff3ba95b4d3a14a66415e5279910a67",
+                "reference": "489042186ff3ba95b4d3a14a66415e5279910a67",
                 "shasum": ""
             },
             "require": {
@@ -1346,7 +1346,7 @@
                     "email": "wili.lixiang@gmail.com"
                 }
             ],
-            "description": "design-pattern example",
+            "description": "design-pattern Generic examples",
             "homepage": "https://github.com/HypnosKiss/design-pattern/",
             "keywords": [
                 "design-pattern",
@@ -1354,9 +1354,9 @@
             ],
             "support": {
                 "issues": "https://github.com/HypnosKiss/design-pattern/issues",
-                "source": "https://github.com/HypnosKiss/design-pattern/tree/1.0.1.2"
+                "source": "https://github.com/HypnosKiss/design-pattern/tree/1.0.1"
             },
-            "time": "2023-09-05T04:33:31+00:00"
+            "time": "2023-09-08T09:17:33+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
