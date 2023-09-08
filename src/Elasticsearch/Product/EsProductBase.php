@@ -5,16 +5,16 @@
  * Time: 2023/3/20 13:46
  */
 
-namespace Sweeper\HelperPhp\es\product;
+namespace Sweeper\HelperPhp\Elasticsearch\Product;
 
-use Sweeper\HelperPhp\es\Elasticsearch;
+use Sweeper\HelperPhp\Tool\Elasticsearch;
 
 /**
- * 采购产品基类
+ * ES 产品基类
  * Created by PhpStorm.
  * User: Sweeper
- * Time: 2023/3/20 21:01
- * @Path \es\product\EsProductBase
+ * Time: 2023/8/21 19:07
+ * @Path \Sweeper\HelperPhp\Elasticsearch\Product\EsProductBase
  */
 class EsProductBase
 {
@@ -156,7 +156,7 @@ class EsProductBase
      */
     public static function withFields(string $field = ''): \Closure
     {
-        return static function (array $item) use ($field) {
+        return static function(array $item) use ($field) {
             $item   = $item['_source'] ?? $item;
             $result = [];
             if (strlen(trim($field)) > 1) {

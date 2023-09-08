@@ -1,10 +1,11 @@
 <?php
 
-namespace Sweeper\HelperPhp\es;
+namespace Sweeper\HelperPhp\Tool;
 
+use BadMethodCallException;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
-use Sweeper\DesignPattern\traits\SinglePattern;
+use Sweeper\DesignPattern\Traits\Multiton;
 
 /**
  * Elasticsearch 客户端封装
@@ -12,7 +13,7 @@ use Sweeper\DesignPattern\traits\SinglePattern;
  * User: Sweeper
  * Time: 2023/3/13 18:14
  * @example Elasticsearch::instance()->indices()
- * @Path \elasticsearch\Elasticsearch
+ * @Path \Sweeper\HelperPhp\Tool\Elasticsearch
  * @mixin Client
  * @doc https://www.elastic.co/guide/cn/elasticsearch/guide/current/foreword_id.html
  * @doc https://www.elastic.co/guide/cn/elasticsearch/php/current/_overview.html
@@ -25,14 +26,12 @@ use Sweeper\DesignPattern\traits\SinglePattern;
  * 'client' => [ 'ignore' => 404 ]
  * ];
  * echo $client->get($params);
- *
  * $params = [
  * 'index'  => 'test_missing',
  * 'type'   => 'test',
  * 'client' => [ 'ignore' => [400, 404] ]
  * ];
  * echo $client->get($params);
- *
  * $params = [
  * 'index' => 'test',
  * 'type' => 'test',
@@ -47,7 +46,7 @@ use Sweeper\DesignPattern\traits\SinglePattern;
 class Elasticsearch
 {
 
-    use SinglePattern;
+    use Multiton;
 
     /** @var Client 客户端实例 */
     private $client;
@@ -83,17 +82,12 @@ class Elasticsearch
      * @param array $options
      * @return Client
      */
-    public function build(array $options = []): Client
+    public function buildClient(array $options = []): Client
     {
         if ($this->client instanceof Client) {
             return $this->client;
         }
-        $options['hosts'] = config('es.hosts') ?: array_filter(explode(',', str_replace([PHP_EOL, "，", " "], ',', env('es.hosts'))));
-        if (empty($this->config)) {
-            $this->setConfig(Config::pull('es') ?: []);
-        }
-        $options = array_replace($this->config, $options);
-
+        $options = array_replace($this->getConfig(), $options);
         if (!$options['hosts']) {
             throw new \InvalidArgumentException('ES 客户端初始化异常，没有找到可用的 host');
         }
@@ -111,9 +105,13 @@ class Elasticsearch
      */
     public function __call($name, $arguments)
     {
-        $arguments[0] = array_replace($this->getClientParams(), $arguments[0]);// 使用设置的公共参数
+        if (method_exists($this->buildClient(), $name)) {
+            $arguments[0] = array_replace($this->getClientParams(), $arguments[0]);// 使用设置的公共参数
 
-        return $this->build()->{$name}(...$arguments);
+            return $this->buildClient()->{$name}(...$arguments);
+        }
+
+        throw new BadMethodCallException('Call Undefined method');
     }
 
     /**

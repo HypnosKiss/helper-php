@@ -3,30 +3,46 @@
  * redis扩展
  */
 
-namespace Sweeper\HelperPhp;
+namespace Sweeper\HelperPhp\Tool;
 
 use Predis\Client;
-use Sweeper\DesignPattern\traits\SinglePattern;
+use Sweeper\DesignPattern\Traits\Multiton;
 
 /**
+ * predis 客户端
  * Created by PhpStorm.
  * User: Sweeper
- * Time: 2023/1/17 21:39
- * @Path \redis\RedisClient
+ * Time: 2023/8/27 22:55
+ * @Path \Sweeper\HelperPhp\Tool\RedisClient
  * @mixin Client
  */
 class RedisClient
 {
 
-    use SinglePattern;
+    use Multiton;
 
     /** @var Client */
     private $client;
 
-    public const CLUSTER_REDIS  = 'redis';
-    public const CLUSTER_PREDIS = 'predis';
+    public const CLUSTER_REDIS         = 'redis';
 
-    public const REDIS_KEY_PREFIX = 'sync:orders:';
+    public const CLUSTER_PREDIS        = 'predis';
+
+    public const CLUSTER_REDIS_CLUSTER = 'redis-cluster';
+
+    private $prefix = 'predis:';
+
+    public function getPrefix(): string
+    {
+        return $this->prefix;
+    }
+
+    public function setPrefix(string $prefix): self
+    {
+        $this->prefix = $prefix;
+
+        return $this;
+    }
 
     /**
      * 连接 Redis
@@ -44,23 +60,19 @@ class RedisClient
         if ($this->client instanceof Client) {
             return $this->client;
         }
-        if (empty($this->config)) {
-            $this->setConfig(config('cache.redis'));
-        }
-        $options = array_replace($this->config, $options);// read_write_timeout
-
+        $options = array_replace($this->getConfig(), $options);
         if ($options['cluster_list']) {
             $servers      = $options['cluster_list'];
             $option       = [
-                'cluster'    => $options['cluster'] ?? static::CLUSTER_REDIS,
+                'cluster'    => $options['cluster'] ?? static::CLUSTER_REDIS_CLUSTER,
                 'parameters' => array_replace([
                     'password'   => $options['password'] ?? '',
                     'timeout'    => $options['timeout'] ?? 10,
                     'select'     => $options['select'] ?? 0,// 选择的数据库
                     'expire'     => $options['expire'] ?? 0, // 缓存有效期 0表示永久缓存
-                    'prefix'     => $options['prefix'] ?? static::REDIS_KEY_PREFIX, // 缓存前缀
+                    'prefix'     => $options['prefix'] ?? $this->getPrefix(), // 缓存前缀
                     'persistent' => $options['persistent'] ?? false,// 是否长连接 false=短连接
-                ], $options)
+                ], $options),
             ];
             $this->client = new Client($servers, $option);
         } else {
@@ -72,7 +84,7 @@ class RedisClient
                 'timeout'    => $options['timeout'] ?? 10,
                 'select'     => $options['select'] ?? 0,// 选择的数据库
                 'expire'     => $options['expire'] ?? 0, // 缓存有效期 0表示永久缓存
-                'prefix'     => $options['prefix'] ?? static::REDIS_KEY_PREFIX, // 缓存前缀
+                'prefix'     => $options['prefix'] ?? $this->getPrefix(), // 缓存前缀
                 'persistent' => $options['persistent'] ?? false,// 是否长连接 false=短连接
             ], $options));
         }
@@ -85,4 +97,17 @@ class RedisClient
         return $this->connection()->{$name}(...$arguments);
     }
 
+    /**
+     * 生成 KEY
+     * User: Sweeper
+     * Time: 2023/8/23 17:24
+     * @param $string
+     * @return string
+     */
+    public function generateKey($string): string
+    {
+        return ($this->getConfig('prefix') ?: $this->getPrefix()) . $string;
+    }
+
 }
+
