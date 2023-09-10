@@ -7,7 +7,8 @@
 
 namespace Sweeper\HelperPhp\Elasticsearch\Product;
 
-use Sweeper\HelperPhp\Tool\Elasticsearch;
+use Sweeper\HelperPhp\Tool\ElasticSearchHelper;
+use Sweeper\HelperPhp\Tool\Http;
 
 /**
  * ES 产品基类
@@ -39,7 +40,7 @@ class EsProductBase
                 '_source' => $_source,
             ], $params);
             try {
-                $item = Elasticsearch::instance()->get($params);
+                $item = ElasticSearchHelper::instance()->get($params);
                 if (!empty($item)) {
                     if ($fieldHandleFuncArr) {
                         foreach ($fieldHandleFuncArr as $fieldHandleFunc) {
@@ -54,7 +55,7 @@ class EsProductBase
                     $result = $_source && isset($source[$_source]) ? $source[$_source] : $source;
                 }
             } catch (\Throwable $ex) {
-                if ($ex->getCode() !== 404) {// 数据没找到时，返回“404”，不报异常
+                if ($ex->getCode() !== Http::STATUS_NOT_FOUND) {// 数据没找到时，返回“404”，不报异常
                     throw new \RuntimeException("{$ex->getFile()}#{$ex->getLine()} ({$ex->getMessage()})");
                 }
             }
@@ -106,7 +107,7 @@ class EsProductBase
                     'size'    => count($skuList),
                 ],
                     $params);
-                $res    = Elasticsearch::instance()->search($params);
+                $res    = ElasticSearchHelper::instance()->search($params);
                 $list   = $res['hits']['hits'];
                 if (!empty($list)) {
                     foreach ($list as $item) {
@@ -125,7 +126,7 @@ class EsProductBase
                     }
                 }
             } catch (\Throwable $ex) {
-                if ($ex->getCode() !== 404) {// 数据没找到时，返回“404”，不报异常
+                if ($ex->getCode() !== Http::STATUS_NOT_FOUND) {// 数据没找到时，返回“404”，不报异常
                     throw new \RuntimeException("{$ex->getFile()}#{$ex->getLine()} ({$ex->getMessage()})");
                 }
             }

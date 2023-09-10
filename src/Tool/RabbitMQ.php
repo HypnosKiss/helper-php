@@ -241,7 +241,7 @@ class RabbitMQ
          * $this->config 为 MQ 主配置如 host、port、username、password、vhost、queue/queue_name
          * $this->queueConfig 为指定的队列配置如 queue_name、exchange_name、routeing_key ...
          */
-        $config = $this->setConfig(array_replace($this->getConfig(), $nameConfig, $config))->getConfig() ?: [];
+        $config = $this->setConfig(array_replace($this->getConfig(), $this->loadConfig(), $nameConfig, $config))->getConfig() ?: [];
         $this->setQueueConfig(array_replace($config['queue'] ?? [], $config['queue'][$this->getQueueConfigName()] ?? [], $this->queueConfig))->getQueueConfig();
         if (!$config['host'] || !$config['port'] || !$config['username'] || !$config['password']) {
             throw new \InvalidArgumentException('配置无效，请检查配置信息');
@@ -296,7 +296,11 @@ class RabbitMQ
         if (method_exists($this->getConnection(), $name)) {
             return $this->getConnection()->{$name}(...$arguments);
         }
-        throw new \BadMethodCallException('No callable method found.');
+        if (method_exists($this, $name)) {
+            return $this->{$name}(...$arguments);
+        }
+
+        throw new \BadMethodCallException('Call Undefined method');
     }
 
     /**
@@ -306,6 +310,32 @@ class RabbitMQ
     public function __destruct()
     {
         $this->close();
+    }
+
+    /**
+     * 加载配置
+     * User: Sweeper
+     * Time: 2023/9/10 10:58
+     * @return array
+     */
+    public function loadConfig(): array
+    {
+        return [
+            'host'     => '127.0.0.1', // IP
+            'port'     => 5672,// 端口
+            'username' => 'test',// 用户名
+            'password' => 'test123456',// 密码
+            'vhost'    => '/',// mq交换机路径
+            // 队列配置
+            'queue'    => [
+                // 队列名称对应MQ交换机配置
+                'test' => [
+                    'queue_name'    => 'test',
+                    'exchange_name' => null, // default、queue_name一致
+                    'routing_key'   => 'test',
+                ],
+            ],
+        ];
     }
 
     /**
@@ -324,7 +354,7 @@ class RabbitMQ
     public function configQueue(string $queueName = '', string $routingKey = '', string $exchangeName = '', bool $exchangeDeclare = true, bool $queueDeclare = true, bool $queueBind = true): self
     {
         $queueName    = $queueName ?: $this->getSpecifyConfig('queue_name');
-        $exchangeName = $exchangeName ?: $this->getSpecifyConfig('exchange_name', 'default');
+        $exchangeName = $exchangeName ?: $this->getSpecifyConfig('exchange_name', null);
         $routingKey   = $routingKey ?: $this->getSpecifyConfig('routing_key');
         $exchangeType = $this->getSpecifyConfig('exchange_type', static::DIRECT);
         $passive      = $this->getSpecifyConfig('passive', false);     // 是否检测同名队列
@@ -363,7 +393,7 @@ class RabbitMQ
     {
         try {
             $message = new AMQPMessage(json_encode($body, JSON_UNESCAPED_UNICODE), array_replace(['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT], $properties));
-            $this->getChannel()->basic_publish($message, $exchangeName ?: $this->getSpecifyConfig('exchange_name', 'default'), $routingKey ?: $this->getSpecifyConfig('routing_key'));
+            $this->getChannel()->basic_publish($message, $exchangeName ?: $this->getSpecifyConfig('exchange_name', null), $routingKey ?: $this->getSpecifyConfig('routing_key'));
             $flag = true;
         } catch (Throwable $ex) {
             $flag = false;

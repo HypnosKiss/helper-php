@@ -60,11 +60,11 @@ class RedisClient
         if ($this->client instanceof Client) {
             return $this->client;
         }
-        $options = array_replace($this->getConfig(), $options);
-        if ($options['cluster_list']) {
+        $options = array_replace($this->getConfig(), $this->loadConfig(), $options);
+        if (!empty($options['cluster_list'])) {
             $servers      = $options['cluster_list'];
             $option       = [
-                'cluster'    => $options['cluster'] ?? static::CLUSTER_REDIS_CLUSTER,
+                'cluster'    => $options['cluster'] ?? $options['cluster_type'] ?? static::CLUSTER_REDIS_CLUSTER,
                 'parameters' => array_replace([
                     'password'   => $options['password'] ?? '',
                     'timeout'    => $options['timeout'] ?? 10,
@@ -94,7 +94,14 @@ class RedisClient
 
     public function __call($name, $arguments)
     {
-        return $this->connection()->{$name}(...$arguments);
+        if (method_exists($this->connection(), $name)) {
+            return $this->connection()->{$name}(...$arguments);
+        }
+        if (method_exists($this, $name)) {
+            return $this->{$name}(...$arguments);
+        }
+
+        throw new \BadMethodCallException('Call Undefined method');
     }
 
     /**
@@ -107,6 +114,45 @@ class RedisClient
     public function generateKey($string): string
     {
         return ($this->getConfig('prefix') ?: $this->getPrefix()) . $string;
+    }
+
+    /**
+     * 加载配置
+     * User: Sweeper
+     * Time: 2023/9/10 10:58
+     * @return array
+     */
+    public function loadConfig(): array
+    {
+        return [
+            // 驱动方式
+            'type'         => 'redis',
+            //服务器地址
+            'host'         => '127.0.0.1',
+            //端口
+            'port'         => '6374',
+            //密码
+            'password'     => '',
+            //超时时间
+            'timeout'      => 10,
+            //选择的库
+            'select'       => 0,
+            // 缓存有效期 0表示永久缓存
+            'expire'       => 86400,
+            // 缓存前缀
+            'prefix'       => '',
+            //是否长连接 false=短连接
+            'persistent'   => false,
+            'cluster_type' => 'redis-cluster',
+            'cluster_list' => [
+                '127.0.0.1:6374',
+                '127.0.0.1:6375',
+                '127.0.0.1:6376',
+                '127.0.0.1:6377',
+                '127.0.0.1:6378',
+                '127.0.0.1:6379',
+            ],
+        ];
     }
 
 }

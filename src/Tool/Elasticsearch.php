@@ -2,7 +2,6 @@
 
 namespace Sweeper\HelperPhp\Tool;
 
-use BadMethodCallException;
 use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Sweeper\DesignPattern\Traits\MultiPattern;
@@ -87,7 +86,7 @@ class Elasticsearch
         if ($this->client instanceof Client) {
             return $this->client;
         }
-        $options = array_replace($this->getConfig(), $options);
+        $options = array_replace($this->getConfig(), $this->loadConfig(), $options);
         if (empty($options['hosts'])) {
             throw new \InvalidArgumentException('ES 客户端初始化异常，没有找到可用的 host');
         }
@@ -110,8 +109,11 @@ class Elasticsearch
 
             return $this->buildClient()->{$name}(...$arguments);
         }
+        if (method_exists($this, $name)) {
+            return $this->{$name}(...$arguments);
+        }
 
-        throw new BadMethodCallException('Call Undefined method');
+        throw new \BadMethodCallException('Call Undefined method');
     }
 
     /**
@@ -166,6 +168,21 @@ class Elasticsearch
         $this->clientParams['client']['verbose'] = $verbose;
 
         return $this;
+    }
+
+    /**
+     * 加载配置
+     * User: Sweeper
+     * Time: 2023/9/10 10:58
+     * @return array
+     */
+    public function loadConfig(): array
+    {
+        return [
+            'hosts' => [
+                '127.0.0.1:9200',
+            ],
+        ];
     }
 
 }
