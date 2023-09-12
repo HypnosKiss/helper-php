@@ -8,8 +8,11 @@ namespace Sweeper\HelperPhp\Crontab\CrontabValidator;
 use Sweeper\HelperPhp\Crontab\CrontabValidator\Exceptions\InvalidExpressionException;
 
 /**
- * Class CrontabValidator
- * @package hollodotme\CrontabValidator
+ * CrontabValidator
+ * Created by PhpStorm.
+ * User: Sweeper
+ * Time: 2023/9/12 15:32
+ * @Path \Sweeper\HelperPhp\Crontab\CrontabValidator\CrontabValidator
  */
 class CrontabValidator
 {

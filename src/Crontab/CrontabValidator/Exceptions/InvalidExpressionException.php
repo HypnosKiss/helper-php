@@ -6,8 +6,11 @@
 namespace Sweeper\HelperPhp\Crontab\CrontabValidator\Exceptions;
 
 /**
- * Class InvalidExpressionException
- * @package hollodotme\CrontabValidator\Exceptions
+ * InvalidExpressionException
+ * Created by PhpStorm.
+ * User: Sweeper
+ * Time: 2023/9/12 15:32
+ * @Path \Sweeper\HelperPhp\Crontab\CrontabValidator\Exceptions\InvalidExpressionException
  */
 final class InvalidExpressionException extends \InvalidArgumentException
 {
