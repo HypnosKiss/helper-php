@@ -43,6 +43,7 @@ use AlibabaCloud\Client\Result\Result;
  * @package Sweeper\HelperPhp\Tool\Text
  * @doc https://help.aliyun.com/document_detail/2505918.html?spm=a2c4g.125181.0.0.309b70bbECujKM
  * @doc https://www.aliyun.com/product/ai/base_alimt
+ * @package 'alibabacloud/sdk': '^1.8',
  */
 class Text
 {
