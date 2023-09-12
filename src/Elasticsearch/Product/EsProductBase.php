@@ -7,18 +7,38 @@
 
 namespace Sweeper\HelperPhp\Elasticsearch\Product;
 
+use Sweeper\HelperPhp\Tool\Elasticsearch;
 use Sweeper\HelperPhp\Tool\ElasticSearchHelper;
 use Sweeper\HelperPhp\Tool\Http;
 
 /**
  * ES 产品基类
  * Created by PhpStorm.
- * User: Sweeper
- * Time: 2023/8/21 19:07
- * @Path \Sweeper\HelperPhp\Elasticsearch\Product\EsProductBase
+ * Author: Sweeper <wili.lixiang@gmail.com>
+ * DateTime: 2023/9/12 16:43
+ * @Package \Sweeper\HelperPhp\Elasticsearch\Product\EsProductBase
  */
 class EsProductBase
 {
+
+    /** @var Elasticsearch */
+    private static $handler;
+
+    /**
+     * @return \Sweeper\HelperPhp\Tool\Elasticsearch
+     */
+    public static function getHandler(): Elasticsearch
+    {
+        return self::$handler ?: ElasticSearchHelper::instance();
+    }
+
+    /**
+     * @param mixed $handler
+     */
+    public static function setHandler($handler): void
+    {
+        self::$handler = $handler;
+    }
 
     /**
      * 根据 SKU 获取产品信息
@@ -40,7 +60,7 @@ class EsProductBase
                 '_source' => $_source,
             ], $params);
             try {
-                $item = ElasticSearchHelper::instance()->get($params);
+                $item = static::getHandler()->get($params);
                 if (!empty($item)) {
                     if ($fieldHandleFuncArr) {
                         foreach ($fieldHandleFuncArr as $fieldHandleFunc) {
@@ -107,7 +127,7 @@ class EsProductBase
                     'size'    => count($skuList),
                 ],
                     $params);
-                $res    = ElasticSearchHelper::instance()->search($params);
+                $res    = static::getHandler()->search($params);
                 $list   = $res['hits']['hits'];
                 if (!empty($list)) {
                     foreach ($list as $item) {
