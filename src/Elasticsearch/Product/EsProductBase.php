@@ -7,6 +7,7 @@
 
 namespace Sweeper\HelperPhp\Elasticsearch\Product;
 
+use Closure;
 use Sweeper\HelperPhp\Tool\Elasticsearch;
 use Sweeper\HelperPhp\Tool\ElasticSearchHelper;
 use Sweeper\HelperPhp\Tool\Http;
@@ -125,8 +126,7 @@ class EsProductBase
                         ],
                     ],
                     'size'    => count($skuList),
-                ],
-                    $params);
+                ], $params);
                 $res    = static::getHandler()->search($params);
                 $list   = $res['hits']['hits'];
                 if (!empty($list)) {
@@ -192,6 +192,95 @@ class EsProductBase
             }
 
             return $result;
+        };
+    }
+
+    /**
+     * 使用申报信息格式
+     * User: Sweeper
+     * Time: 2023/3/15 18:59
+     * @param string $field
+     * @return Closure
+     */
+    public static function withDeclare(string $field = 'declare_items'): \Closure
+    {
+        return static function(array $item) use ($field) {
+            $item    = $item['_source'] ?? $item;
+            $_list   = $item['declare_items'] ?? [];
+            $_result = [];
+            foreach ($_list as $itm) {
+                $_result[$itm['type']] = ['words_type' => $itm['type'], 'words' => $itm['words']];
+            }
+            $item[$field] = $_result;
+
+            return $item;
+        };
+    }
+
+    /**
+     * 使用尺寸格式
+     * User: Sweeper
+     * Time: 2023/3/15 18:38
+     * @param string $field
+     * @return \Closure
+     */
+    public static function withSize(string $field = 'size'): \Closure
+    {
+        return static function(array $item) use ($field) {
+            $item                             = $item['_source'] ?? $item;
+            $item[$field][EsProductSku::NET]  = [
+                'size_l' => $item['net_length'],
+                'size_w' => $item['net_width'],
+                'size_h' => $item['net_height'],
+                'weight' => $item['net_weight'],
+                'type'   => EsProductSku::NET,
+            ];
+            $item[$field][EsProductSku::PACK] = [
+                'size_l' => $item['pack_length'],
+                'size_w' => $item['pack_width'],
+                'size_h' => $item['pack_height'],
+                'weight' => $item['pack_weight'],
+                'type'   => EsProductSku::PACK,
+            ];
+
+            return $item;
+        };
+    }
+
+    /**
+     * 使用成本格式
+     * User: Sweeper
+     * Time: 2023/3/15 18:39
+     * @param string $field
+     * @return \Closure
+     */
+    public static function withCostInfo(string $field = 'cost_info'): \Closure
+    {
+        return static function(array $item) use ($field) {
+            $item      = $item['_source'] ?? $item;
+            $costItems = $item['cost_items'] ?? [];
+            foreach ($costItems as $itm) {
+                $item[$field][$itm['warehouse_code']] = $itm;
+            }
+
+            return $item;
+        };
+    }
+
+    /**
+     * 使用产品 sku 格式
+     * User: Sweeper
+     * Time: 2023/3/15 18:40
+     * @param string $field
+     * @return Closure
+     */
+    public static function withProCode(string $field = 'pro_code'): \Closure
+    {
+        return static function(array $item) use ($field) {
+            $item         = $item['_source'] ?? $item;
+            $item[$field] = $item['pro_code'] ?? $item['sku'];
+
+            return $item;
         };
     }
 

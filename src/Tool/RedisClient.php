@@ -60,7 +60,7 @@ class RedisClient
         if ($this->client instanceof Client) {
             return $this->client;
         }
-        $options = array_replace($this->getConfig(), $this->loadConfig(), $options);
+        $options = array_replace($this->loadConfig(), $this->getConfig(), $options);
         if (!empty($options['cluster_list'])) {
             $servers      = $options['cluster_list'];
             $option       = [

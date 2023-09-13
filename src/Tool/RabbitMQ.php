@@ -241,7 +241,7 @@ class RabbitMQ
          * $this->config 为 MQ 主配置如 host、port、username、password、vhost、queue/queue_name
          * $this->queueConfig 为指定的队列配置如 queue_name、exchange_name、routeing_key ...
          */
-        $config = $this->setConfig(array_replace($this->getConfig(), $this->loadConfig(), $nameConfig, $config))->getConfig() ?: [];
+        $config = $this->setConfig(array_replace($this->loadConfig(), $this->getConfig(), $nameConfig, $config))->getConfig() ?: [];
         $this->setQueueConfig(array_replace($config['queue'] ?? [], $config['queue'][$this->getQueueConfigName()] ?? [], $this->queueConfig))->getQueueConfig();
         if (!$config['host'] || !$config['port'] || !$config['username'] || !$config['password']) {
             throw new \InvalidArgumentException('配置无效，请检查配置信息');
