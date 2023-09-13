@@ -94,14 +94,11 @@ class RedisClient
 
     public function __call($name, $arguments)
     {
-        if (method_exists($this->connection(), $name)) {
-            return $this->connection()->{$name}(...$arguments);
-        }
         if (method_exists($this, $name)) {
             return $this->{$name}(...$arguments);
         }
 
-        throw new \BadMethodCallException('Call Undefined method');
+        return $this->connection()->{$name}(...$arguments);
     }
 
     /**
