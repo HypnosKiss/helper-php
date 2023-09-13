@@ -176,7 +176,7 @@ trait LogTrait
      */
     public function getDefaultLogger(string $name = null, string $filename = null, string $logPath = null, bool $registerErrorHandler = true): Logger
     {
-        return $this->setLogger(static::getSpecificLogger($name, $filename, $logPath, $registerErrorHandler))->getLogger();
+        return $this->setLogger(static::getSpecificLogger($name ?? $this->getLoggerName(), $filename ?? $this->getFilename(), $logPath ?? $this->getLogPath(), $registerErrorHandler))->getLogger();
     }
 
     /**

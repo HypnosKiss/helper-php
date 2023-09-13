@@ -26,13 +26,13 @@ trait Cache
      * @param string   $cacheKey        缓存 KEY
      * @param string   $cacheField      缓存 FIELD
      * @param callable $getDataCallback 获取数据的回调
-     * @param int      $expire          缓存过期时间
      * @param int      $emptyDataExpire 空数据过期时间
+     * @param int      $expire          缓存过期时间
      * @param bool     $refresh         强制刷新
      * @param mixed    ...$args         回调的参数
      * @return array [$data, $errors]
      */
-    public function getDataByHGet(string $cacheKey, string $cacheField, callable $getDataCallback, int $expire = 86400, int $emptyDataExpire = 300, bool $refresh = false, ...$args): array
+    public function getDataByHGet(string $cacheKey, string $cacheField, callable $getDataCallback, int $emptyDataExpire = 300, int $expire = 86400, bool $refresh = false, ...$args): array
     {
         $errors   = [];
         $cacheKey = RedisClient::instance()->generateKey($cacheKey);
