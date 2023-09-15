@@ -50,5 +50,6 @@
 
 # Embedded web-server pid file
 /.web-server-pid
-
+test
 .idea
+*.log
