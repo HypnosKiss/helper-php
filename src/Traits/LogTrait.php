@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Sweeper
@@ -294,33 +295,32 @@ trait LogTrait
         $logPath  = $logPath ?: APP_PATH . '/runtime/log';
 
         // 实例化一个日志实例, 参数是 channel name
-        $logger = new Logger($name);
+        $logger               = new Logger($name);
+        $streamHandlerConsole = new StreamHandler('php://stdout', Logger::DEBUG);                              // 控制台输出
+        $infoFileHandler      = new RotatingFileHandler("{$logPath}/{$filename}.info.log", 7, Logger::INFO);   // INFO 等级文件处理器
+        $errorFileHandler     = new RotatingFileHandler("{$logPath}/{$filename}.error.log", 7, Logger::ERROR); // ERROR 等级文件处理器
 
-        $streamHandlerConsole = new StreamHandler('php://stdout', Logger::DEBUG);// 控制台输出
-        $logger->pushHandler($streamHandlerConsole);                             // $streamHandlerConsole->setFormatter(new JsonFormatter());// 设置日志格式为json
-
-        $infoFileHandler  = new RotatingFileHandler("{$logPath}/{$filename}.info.log", 7, Logger::INFO);  // INFO 等级文件处理器
-        $errorFileHandler = new RotatingFileHandler("{$logPath}/{$filename}.error.log", 7, Logger::ERROR);// ERROR 等级文件处理器
-        $logger->pushHandler($infoFileHandler->setFormatter(new JsonFormatter()));                        // 入栈, 往 handler stack 里压入 StreamHandler 的实例
-        $logger->pushHandler($errorFileHandler->setFormatter(new JsonFormatter()));                       // 入栈, 往 handler stack 里压入 StreamHandler 的实例
-        $logger->pushHandler(new FirePHPHandler());
-        $logger->pushHandler(new ChromePHPHandler());
-        $logger->pushHandler(new BrowserConsoleHandler());
+        $logger->pushHandler($streamHandlerConsole)
+               ->pushHandler($infoFileHandler->setFormatter(new JsonFormatter()))// 入栈, 往 handler stack 里压入 StreamHandler 的实例
+               ->pushHandler($errorFileHandler->setFormatter(new JsonFormatter()))
+               ->pushHandler(new FirePHPHandler())
+               ->pushHandler(new ChromePHPHandler())
+               ->pushHandler(new BrowserConsoleHandler());
 
         /**
          * processor 日志加工程序，用来给日志添加额外信息.
          * 这里调用了内置的 UidProcessor 类和 ProcessIdProcessor 类.
          * 在生成的日志文件中, 会在最后面显示这些额外信息.
          */
-        $logger->pushProcessor(new ProcessIdProcessor());
-        $logger->pushProcessor(new MemoryUsageProcessor());
-        $logger->pushProcessor(new MemoryPeakUsageProcessor());
-        $logger->pushProcessor(new IntrospectionProcessor(Logger::WARNING));
-        $logger->pushProcessor(function($record) {
-            $record['logTime'] = date('Y-m-d H:i:s');
+        $logger->pushProcessor(new ProcessIdProcessor())
+               ->pushProcessor(new MemoryUsageProcessor())
+               ->pushProcessor(new MemoryPeakUsageProcessor())
+               ->pushProcessor(new IntrospectionProcessor(Logger::WARNING))
+               ->pushProcessor(function($record) {
+                   $record['logTime'] = date('Y-m-d H:i:s');
 
-            return $record;
-        });
+                   return $record;
+               });
 
         $registerErrorHandler && ErrorHandler::register($logger);
 
