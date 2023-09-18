@@ -104,13 +104,13 @@ class Elasticsearch
      */
     public function __call($name, $arguments)
     {
+        if (method_exists($this, $name)) {
+            return $this->{$name}(...$arguments);
+        }
         if (method_exists($this->buildClient(), $name)) {
             $arguments[0] = array_replace($this->getClientParams(), $arguments[0]);// 使用设置的公共参数
 
             return $this->buildClient()->{$name}(...$arguments);
-        }
-        if (method_exists($this, $name)) {
-            return $this->{$name}(...$arguments);
         }
 
         throw new \BadMethodCallException('Call Undefined method');

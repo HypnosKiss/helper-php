@@ -290,14 +290,14 @@ class RabbitMQ
      */
     public function __call($name, $arguments)
     {
+        if (method_exists($this, $name)) {
+            return $this->{$name}(...$arguments);
+        }
         if (method_exists($this->getChannel(), $name)) {
             return $this->getChannel()->{$name}(...$arguments);
         }
         if (method_exists($this->getConnection(), $name)) {
             return $this->getConnection()->{$name}(...$arguments);
-        }
-        if (method_exists($this, $name)) {
-            return $this->{$name}(...$arguments);
         }
 
         throw new \BadMethodCallException('Call Undefined method');

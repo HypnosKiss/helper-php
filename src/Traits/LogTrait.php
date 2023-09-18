@@ -56,17 +56,18 @@ trait LogTrait
      * @param array  $arguments
      * @return mixed
      */
-    public function __call(string $methodName, array $arguments)
+    public function __call(string $name, array $arguments)
     {
         // 优先调用自己方法
-        if (method_exists(static::class, $methodName)) {
-            return $this->{$methodName}(...$arguments);
+        if (method_exists($this, $name)) {
+            return $this->{$name}(...$arguments);
         }
         // 调用 Logger 方法
-        if (method_exists(Logger::class, $methodName)) {
-            return $this->getLogger()->{$methodName}(...$arguments);
+        if (method_exists(Logger::class, $name)) {
+            return $this->getLogger()->{$name}(...$arguments);
         }
-        throw new \BadMethodCallException('Method no exists:' . $methodName);
+
+        return parent::__call($name, $arguments);// 调用父类
     }
 
     /**
