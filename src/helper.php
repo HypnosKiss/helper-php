@@ -565,7 +565,7 @@ if (!function_exists('call_class_method')) {
      */
     function call_class_method($className, $methodName, array $parameter)
     {
-        $refClass = new ReflectionClass($className);  //通过类名进行反射
+        $refClass = new \ReflectionClass($className); //通过类名进行反射
         $instance = $refClass->newInstance();         //通过反射类进行实例化
         $method   = $refClass->getmethod($methodName);//通过方法名获取指定方法
         $method->setAccessible(true);                 //设置可访问性
@@ -585,7 +585,7 @@ if (!function_exists('get_class_property_val')) {
     function get_class_property_val($className, $propertyName)
     {
         // 获取反射类及反射属性
-        $refClass = new ReflectionClass($className);      //通过类名进行反射
+        $refClass = new \ReflectionClass($className);     //通过类名进行反射
         $instance = $refClass->newInstance();             //通过反射类进行实例化
         $property = $refClass->getProperty($propertyName);//通过方法名获取指定方法
         $property->setAccessible(true);                   //设置可访问性
@@ -745,7 +745,7 @@ if (!function_exists('str_to_utf8')) {
      * @param string   $toEncoding
      * @return mixed|string
      */
-    function str_to_utf8($str, array $encodingList = ['ASCII', 'UTF-8', 'GB2312', 'GBK', 'BIG5'], $toEncoding = 'UTF-8')
+    function str_to_utf8($str, array $encodingList = ['ASCII', 'UTF-8', 'GB2312', 'GBK', 'BIG5'], string $toEncoding = 'UTF-8')
     {
         $encode = mb_detect_encoding($str, $encodingList);
         if ($encode === $toEncoding) {
@@ -766,7 +766,7 @@ if (!function_exists('uuid')) {
      */
     function uuid(string $prefix = ''): string
     {
-        $chars = md5(uniqid($prefix . msectime() . mt_rand(), true));
+        $chars = md5(uniqid($prefix . get_microtime() . mt_rand(), true));
 
         return substr($chars, 0, 8) . '-' . substr($chars, 8, 4) . '-' . substr($chars, 12, 4) . '-' . substr($chars, 16, 4) . '-' . substr($chars, 20, 12);
     }
@@ -965,7 +965,7 @@ function get_php_info(): array
  */
 function get_php_release_summary(): string
 {
-    $info     = self::getPhpInfo();
+    $info     = get_php_info();
     $ts       = $info['phpinfo']['Thread Safety'] === 'enabled' ? 'ts' : 'nts';
     $compiler = $info['phpinfo']['Compiler'];
     if (preg_match('/ms(vc\d+)\s/i', $compiler, $matches)) {

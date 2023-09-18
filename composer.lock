@@ -1371,16 +1371,16 @@
         },
         {
             "name": "sweeper/design-pattern",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/HypnosKiss/design-pattern.git",
-                "reference": "489042186ff3ba95b4d3a14a66415e5279910a67"
+                "reference": "1745d69b9221a0718f7cb30c198e4c8b0856a1ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/HypnosKiss/design-pattern/zipball/489042186ff3ba95b4d3a14a66415e5279910a67",
-                "reference": "489042186ff3ba95b4d3a14a66415e5279910a67",
+                "url": "https://api.github.com/repos/HypnosKiss/design-pattern/zipball/1745d69b9221a0718f7cb30c198e4c8b0856a1ee",
+                "reference": "1745d69b9221a0718f7cb30c198e4c8b0856a1ee",
                 "shasum": ""
             },
             "require": {
@@ -1410,22 +1410,22 @@
             ],
             "support": {
                 "issues": "https://github.com/HypnosKiss/design-pattern/issues",
-                "source": "https://github.com/HypnosKiss/design-pattern/tree/1.0.1"
+                "source": "https://github.com/HypnosKiss/design-pattern/tree/1.0.2"
             },
-            "time": "2023-09-08T09:17:33+00:00"
+            "time": "2023-09-15T16:01:10+00:00"
         },
         {
             "name": "sweeper/guzzlehttp-request",
-            "version": "1.0.0",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/HypnosKiss/guzzlehttp-request.git",
-                "reference": "2b8f7edffdd189ef157b7587ebbeba8d1a0fa456"
+                "reference": "139b5f8ba9c84a4f5eea7eed8e6448354898ba60"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/HypnosKiss/guzzlehttp-request/zipball/2b8f7edffdd189ef157b7587ebbeba8d1a0fa456",
-                "reference": "2b8f7edffdd189ef157b7587ebbeba8d1a0fa456",
+                "url": "https://api.github.com/repos/HypnosKiss/guzzlehttp-request/zipball/139b5f8ba9c84a4f5eea7eed8e6448354898ba60",
+                "reference": "139b5f8ba9c84a4f5eea7eed8e6448354898ba60",
                 "shasum": ""
             },
             "require": {
@@ -1462,9 +1462,9 @@
             ],
             "support": {
                 "issues": "https://github.com/HypnosKiss/guzzlehttp-request/issues",
-                "source": "https://github.com/HypnosKiss/guzzlehttp-request/tree/1.0.0"
+                "source": "https://github.com/HypnosKiss/guzzlehttp-request/tree/1.0.3"
             },
-            "time": "2023-09-15T15:52:02+00:00"
+            "time": "2023-09-18T07:23:06+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",

@@ -12,12 +12,38 @@ use Sweeper\HelperPhp\Tool\RedisClient;
 /**
  * 缓存通用特征
  * Created by PhpStorm.
- * User: Sweeper
- * Time: 2023/8/11 11:16
- * @Path \App\Traits\Cache
+ * Author: Sweeper <wili.lixiang@gmail.com>
+ * DateTime: 2023/9/18 14:05
+ * @Package \Sweeper\HelperPhp\Traits\Cache
  */
 trait Cache
 {
+
+    /** @var RedisClient Redis 处理器 */
+    private $handler;
+
+    /**
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/9/18 14:05
+     * @return \Sweeper\HelperPhp\Tool\RedisClient
+     */
+    public function getHandler(): RedisClient
+    {
+        return $this->handler ?: RedisClient::instance();
+    }
+
+    /**
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/9/18 14:04
+     * @param $handler
+     * @return $this
+     */
+    public function setHandler($handler): self
+    {
+        $this->handler = $handler;
+
+        return $this;
+    }
 
     /**
      * 通过 hGet 获取数据
@@ -35,9 +61,9 @@ trait Cache
     public function getDataByHGet(string $cacheKey, string $cacheField, callable $getDataCallback, int $emptyDataExpire = 300, int $expire = 86400, bool $refresh = false, ...$args): array
     {
         $errors   = [];
-        $cacheKey = RedisClient::instance()->generateKey($cacheKey);
+        $cacheKey = $this->getHandler()->generateKey($cacheKey);
         try {
-            $cache     = RedisClient::instance()->hGet($cacheKey, $cacheField) ?: '';
+            $cache     = $this->getHandler()->hGet($cacheKey, $cacheField) ?: '';
             $cacheData = json_decode($cache, true) ?: [];
             if (!empty($cacheData['expire']) && $cacheData['expire'] <= time()) {// 校验过期时间，超过过期时间重新获取数据
                 $cacheData = [];                                                 // 置空，重新获取数据，再设置到当前缓存字段
@@ -50,7 +76,7 @@ trait Cache
             $cacheData['data']   = $getDataCallback(...$args) ?: [];
             $cacheData['expire'] = time() + (empty($cacheData['data']) ? $emptyDataExpire : $expire);
             try {
-                RedisClient::instance()->hSet($cacheKey, $cacheField, json_encode($cacheData, JSON_UNESCAPED_UNICODE));
+                $this->getHandler()->hSet($cacheKey, $cacheField, json_encode($cacheData, JSON_UNESCAPED_UNICODE));
             } catch (\Throwable $ex) {
                 $errors[] = "hSet exception:{$ex->getFile()}#{$ex->getLine()} ({$ex->getMessage()})";
             }
