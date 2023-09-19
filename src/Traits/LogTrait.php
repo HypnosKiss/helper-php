@@ -62,12 +62,16 @@ trait LogTrait
         if (method_exists($this, $name)) {
             return $this->{$name}(...$arguments);
         }
+        // 调用父类
+        if (is_callable([$this, $name])) {
+            return parent::__call($name, $arguments);
+        }
         // 调用 Logger 方法
         if (method_exists(Logger::class, $name)) {
             return $this->getLogger()->{$name}(...$arguments);
         }
 
-        return parent::__call($name, $arguments);// 调用父类
+        throw new \BadMethodCallException('Method no exists:' . $name);
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace Sweeper\HelperPhp\DingTalk;
 
 use Psr\Http\Message\ResponseInterface;
+use Sweeper\GuzzleHttpRequest\HttpCode;
 use Sweeper\GuzzleHttpRequest\Response;
 use Sweeper\GuzzleHttpRequest\ServiceRequest;
 use Sweeper\HelperPhp\Traits\Cache;
@@ -392,10 +393,10 @@ class Request extends ServiceRequest
         $responseContent = json_decode($response->getBody()->getContents() ?? '', true);
         $errCode         = $responseContent['errcode'] ?? 0;
         $message         = $responseContent['message'] ?? $response->getReasonPhrase();
-        $responseCode    = Response::CODE_SUCCESS;
-        if ($httpCode !== Response::CODE_SUCCESS || $errCode !== 0) {// HttpCode 为 200 ， code 0 为成功
-            $message      = "接口请求口成功，返回错误：{$message}[" . Response::CODE_COMMON_ERROR . ']';
-            $responseCode = Response::CODE_COMMON_ERROR;
+        $responseCode    = HttpCode::OK;
+        if ($httpCode !== HttpCode::OK || $errCode !== 0) {// HttpCode 为 200 ， code 0 为成功
+            $message      = "接口请求口成功，返回错误：{$message}[" . HttpCode::INTERNAL_SERVER_ERROR . ']';
+            $responseCode = HttpCode::INTERNAL_SERVER_ERROR;
         }
         $responseContent['data'] = $responseContent['data'] ?? [];
 
