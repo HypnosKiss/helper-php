@@ -26,10 +26,11 @@ use ReflectionClass;
 !defined('APP_PATH') && define('APP_PATH', $_SERVER['DOCUMENT_ROOT'] ?: WWW_PATH);              // 定义应用目录
 
 /**
+ * 日志记录
  * Created by PhpStorm.
- * User: Sweeper
- * Time: 2023/8/16 19:02
- * @Path \app\common\traits\LogTrait
+ * Author: Sweeper <wili.lixiang@gmail.com>
+ * DateTime: 2023/9/20 14:31
+ * @Package \Sweeper\HelperPhp\Traits\LogTrait
  * @mixin \Monolog\Logger
  */
 trait LogTrait
@@ -48,6 +49,9 @@ trait LogTrait
 
     /** @var string 日志路径 */
     private $logPath;
+
+    /** @var bool 注册错误处理程序 */
+    private $registerErrorHandler = false;
 
     /**
      * User: Sweeper
@@ -149,7 +153,7 @@ trait LogTrait
     public function getLogger(): Logger
     {
         if (!($this->logger instanceof Logger)) {
-            $this->getDefaultLogger($this->getLoggerName(), $this->getFilename(), $this->getLogPath());
+            $this->getDefaultLogger($this->getLoggerName(), $this->getFilename(), $this->getLogPath(), $this->isRegisterErrorHandler());
         }
 
         return $this->logger;
@@ -169,6 +173,29 @@ trait LogTrait
     }
 
     /**
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/9/20 14:29
+     * @return bool
+     */
+    public function isRegisterErrorHandler(): bool
+    {
+        return $this->registerErrorHandler;
+    }
+
+    /**
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/9/20 14:29
+     * @param bool $registerErrorHandler
+     * @return $this
+     */
+    public function setRegisterErrorHandler(bool $registerErrorHandler): self
+    {
+        $this->registerErrorHandler = $registerErrorHandler;
+
+        return $this;
+    }
+
+    /**
      * 默认日志记录器
      * User: Sweeper
      * Time: 2023/7/27 13:47
@@ -180,9 +207,9 @@ trait LogTrait
      * @return \Monolog\Logger
      * @example $logger->info('Welcome to Sweeper Test.', ['username' => 'sweeper']);
      */
-    public function getDefaultLogger(string $name = null, string $filename = null, string $logPath = null, bool $registerErrorHandler = true): Logger
+    public function getDefaultLogger(string $name = null, string $filename = null, string $logPath = null, bool $registerErrorHandler = null): Logger
     {
-        return $this->setLogger(static::getSpecificLogger($name ?? $this->getLoggerName(), $filename ?? $this->getFilename(), $logPath ?? $this->getLogPath(), $registerErrorHandler))->getLogger();
+        return $this->setLogger(static::getSpecificLogger($name ?? $this->getLoggerName(), $filename ?? $this->getFilename(), $logPath ?? $this->getLogPath(), $registerErrorHandler ?? $this->isRegisterErrorHandler()))->getLogger();
     }
 
     /**
@@ -195,7 +222,7 @@ trait LogTrait
      * @param bool        $registerErrorHandler
      * @return \Monolog\Logger
      */
-    public static function getSpecificLogger(string $name = null, string $filename = null, string $logPath = null, bool $registerErrorHandler = true): Logger
+    public static function getSpecificLogger(string $name = null, string $filename = null, string $logPath = null, bool $registerErrorHandler = false): Logger
     {
         /**
          * Handlers
