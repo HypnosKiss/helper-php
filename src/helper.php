@@ -1028,3 +1028,84 @@ if (!function_exists('get_file_permission')) {
         return $info;
     }
 }
+
+if (!function_exists('get_millisecond')) {
+    /**
+     * 获取毫秒时间戳
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/10/6 16:30
+     * @return float
+     */
+    function get_millisecond(): float
+    {
+        [$t1, $t2] = explode(' ', microtime());
+
+        return (float)sprintf('%.0f', ((float)$t1 + (float)$t2) * 1000);
+    }
+}
+
+if (!function_exists('generate_dingtalk_sign')) {
+    /**
+     * 钉钉签名
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/10/6 16:31
+     * @param string $signSecret
+     * @return array
+     */
+    function generate_dingtalk_sign(string $signSecret): array
+    {
+        $timestamp = get_millisecond();
+        $sign      = base64_encode(hash_hmac('sha256', $timestamp . "\n" . $signSecret, $signSecret, true));
+
+        return ['timestamp' => $timestamp, 'sign' => $sign];
+    }
+}
+
+if (!function_exists('generate_robot_webhook_url')) {
+    /**
+     * 生成地址
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/10/6 15:14
+     * @param string $accessToken
+     * @param string $signSecret
+     * @return string https://oapi.dingtalk.com/robot/send?access_token=fa0b69f92f5b7c2082287514d8d540d44347ae34214a4a912fab97ad439b5086
+     */
+    function generate_robot_webhook_url(string $accessToken, string $signSecret): string
+    {
+        ['timestamp' => $timestamp, 'sign' => $sign] = generate_dingtalk_sign($signSecret);
+
+        return "https://oapi.dingtalk.com/robot/send?access_token=$accessToken&timestamp={$timestamp}&sign={$sign}";
+    }
+}
+
+if (!function_exists('send_ding_talk_message')) {
+    /**
+     * 发送钉钉消息
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/10/6 15:25
+     * @param string $webhook
+     * @param string $message
+     * @param array  $data
+     * @return bool
+     */
+    function send_ding_talk_message(string $webhook, string $message, array $data = []): bool
+    {
+        $data      = $data ?: ['msgtype' => 'text', 'text' => ['content' => $message]];
+        $json_data = json_encode($data);
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $webhook);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json;charset=utf-8']);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 300);
+        $output = curl_exec($ch);
+        curl_close($ch);
+
+        return (bool)$output;
+    }
+}
