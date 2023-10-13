@@ -44,7 +44,14 @@
             "Sweeper\\HelperPhp\\": "src/"
         },
         "files": [
-            "src/helper.php"
+            "src/helper.php",
+            "src/Func/array.php",
+            "src/Func/curl.php",
+            "src/Func/env.php",
+            "src/Func/file.php",
+            "src/Func/string.php",
+            "src/Func/time.php",
+            "src/Func/util.php"
         ]
     },
     "autoload-dev": {
