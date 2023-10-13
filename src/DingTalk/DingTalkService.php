@@ -11,6 +11,18 @@ use Sweeper\GuzzleHttpRequest\Response;
  * Author: Sweeper <wili.lixiang@gmail.com>
  * DateTime: 2023/9/18 12:48
  * @Package \Sweeper\HelperPhp\DingTalk\DingTalkService
+ * @example
+ * $title   = '图搜资源用尽，请充值';
+        $texts[] = '<font face="黑体" color=red size=5>====图搜资源用尽，请充值 - 测试数据====</font>';
+        $prefix  = '> ';
+        $texts[] = $prefix . '**时间**：' . date('Y-m-d H:i:s');
+        $texts[] = $prefix . '**备注**：' . '[修改图搜资源为可用](http://192.168.10.100:1901/index/SysPara/Index)';
+        $text    = implode('</br>' . PHP_EOL, $texts);
+
+        return DingTalkService::instance()
+                              ->setRobotSignSecret('xxx')
+                              ->setRobotAccessToken('xxx')
+                              ->sendNotifyToDingTalk('', false, DingTalkService::generateMarkdownData($title, $text, false, [16675112194]));
  */
 class DingTalkService extends Request
 {
