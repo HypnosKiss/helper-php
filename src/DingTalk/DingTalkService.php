@@ -31,7 +31,7 @@ class DingTalkService extends Request
      */
     public function getDepartmentList(): Response
     {
-        return $this->get($this->buildRequestUri('department/list'), ['access_token' => $this->getAccessToken()]);
+        return $this->get($this->buildRequestUri('department/list', static::DING_TALK_URL), static::withQuery(['access_token' => $this->getAccessToken()]));
     }
 
     /**
@@ -43,7 +43,7 @@ class DingTalkService extends Request
      */
     public function getDepartmentUserList($deptId): Response
     {
-        return $this->get($this->buildRequestUri('user/list'), ['access_token' => $this->getAccessToken(), 'department_id' => $deptId]);
+        return $this->get($this->buildRequestUri('user/list', static::DING_TALK_URL), static::withQuery(['access_token' => $this->getAccessToken(), 'department_id' => $deptId]));
     }
 
     /**
@@ -80,7 +80,7 @@ class DingTalkService extends Request
             'text'    => ['content' => $msgContent],
         ];
 
-        return $this->post($this->buildRequestUri('message/send?access_token=' . $this->getAccessToken()), $params);
+        return $this->post($this->buildRequestUri('message/send?access_token=' . $this->getAccessToken(), static::DING_TALK_URL), static::withJson($params));
     }
 
     /**
@@ -107,26 +107,24 @@ class DingTalkService extends Request
         }
         $messageData = array_replace($defaultFormat, $messageData);
 
-        return $this->post($url, $messageData);
+        return $this->post($url, static::withJson($messageData));
     }
 
     /**
      * 发消息通知钉钉群
      * User: Sweeper
      * Time: 2023/1/10 17:06
-     * @param string      $message
-     * @param string|null $robot
-     * @param bool        $isAtAll
-     * @param array       $messageData
+     * @param string $message
+     * @param bool   $isAtAll
+     * @param array  $messageData
      * @return Response
      */
-    public function sendNotifyToDingTalk(string $message, string $robot = null, bool $isAtAll = false, array $messageData = []): Response
+    public function sendNotifyToDingTalk(string $message, bool $isAtAll = false, array $messageData = []): Response
     {
-        $config      = static::ROBOT_MAP[$robot] ?? [];
-        $secret      = $this->getRobotSecret() ?? ($this->getConfig('secret') ?: $config['secret'] ?? '');
-        $accessToken = $this->getRobotAccessToken() ?? ($this->getConfig('access_token') ?: $config['access_token'] ?? '');
+        $secret      = $this->getRobotSignSecret() ?? ($this->getConfig('secret') ?: '');
+        $accessToken = $this->getRobotAccessToken() ?? ($this->getConfig('access_token') ?: '');
 
-        return $this->setRobotSecret($secret)->setRobotAccessToken($accessToken)->sendNotify($this->generateSignUrl('robot/send'), $message, $isAtAll, $messageData);
+        return $this->setRobotSignSecret($secret)->setRobotAccessToken($accessToken)->sendNotify($this->generateSignUrl('robot/send'), $message, $isAtAll, $messageData);
     }
 
     /**
@@ -138,11 +136,10 @@ class DingTalkService extends Request
      * @param string      $message
      * @param string|null $keyword
      * @param bool        $isAtAll
-     * @param string|null $robot
      * @param bool        $containKeyword
      * @return Response
      */
-    public function sendNotifyByKeyword(string $message, string $keyword = null, bool $isAtAll = false, string $robot = null, bool $containKeyword = true): Response
+    public function sendNotifyByKeyword(string $message, string $keyword = null, bool $isAtAll = false, bool $containKeyword = true): Response
     {
         $messageData = [
             'msgtype' => static::MSG_TYPE_TEXT,
@@ -153,11 +150,10 @@ class DingTalkService extends Request
                 "atMobiles" => [],//被@人的手机号。 注意 在content里添加@人的手机号，且只有在群内的成员才可被@，非群内成员手机号会被脱敏。
             ],
         ];
-        $config      = static::ROBOT_MAP[$robot] ?? [];
-        $secret      = $this->getRobotSecret() ?? ($this->getConfig('secret') ?: $config['secret'] ?? '');
-        $accessToken = $this->getRobotAccessToken() ?? ($this->getConfig('access_token') ?: $config['access_token'] ?? '');
+        $secret      = $this->getRobotSignSecret() ?? ($this->getConfig('secret') ?: '');
+        $accessToken = $this->getRobotAccessToken() ?? ($this->getConfig('access_token') ?: '');
 
-        return $this->setRobotSecret($secret)->setRobotAccessToken($accessToken)->sendNotify($this->generateSignUrl('robot/send'), $message, $isAtAll, $messageData);
+        return $this->setRobotSignSecret($secret)->setRobotAccessToken($accessToken)->sendNotify($this->generateSignUrl('robot/send'), $message, $isAtAll, $messageData);
     }
 
 }

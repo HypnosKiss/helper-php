@@ -24,7 +24,10 @@ class Request extends ServiceRequest
     use RedisCache;
 
     /** @var string 钉钉OApi的url */
-    public const DING_TALK_URL        = "https://oapi.dingtalk.com";
+    public const DING_TALK_URL = "https://oapi.dingtalk.com";
+
+    /** @var string API 地址 */
+    public const DING_TALK_API_URL    = "https://api.dingtalk.com";
 
     public const MSG_TYPE_TEXT        = "text";
 
@@ -127,6 +130,9 @@ class Request extends ServiceRequest
     /** @var string 获取 token 路径 */
     public const GET_TOKEN_PATH = 'gettoken';
 
+    /** @var string 获取 token 路径 */
+    public const GET_ACCESS_TOKEN_PATH = '/v1.0/oauth2/accessToken';
+
     /** @var string 钉钉 token 缓存前缀 */
     public const DINGTALK_TOKEN_PREFIX = 'dingtalk:token';
 
@@ -145,8 +151,8 @@ class Request extends ServiceRequest
     /** @var string 钉钉给的appSecret */
     private $appSecret = 'xxx';
 
-    /** @var string 机器人密钥 */
-    protected $robotSecret;
+    /** @var string 机器人加签密钥 */
+    protected $robotSignSecret;
 
     /** @var string 机器人 accessToken */
     protected $robotAccessToken;
@@ -158,6 +164,17 @@ class Request extends ServiceRequest
      * @return string
      */
     protected function getServerDomain(): string
+    {
+        return static::DING_TALK_API_URL;
+    }
+
+    /**
+     * 获取 OAPI 服务URL
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/10/13 12:52
+     * @return string
+     */
+    public function getOApiUri(): string
     {
         return static::DING_TALK_URL;
     }
@@ -228,20 +245,20 @@ class Request extends ServiceRequest
     /**
      * @return string
      */
-    public function getRobotSecret(): ?string
+    public function getRobotSignSecret(): ?string
     {
-        return $this->robotSecret;
+        return $this->robotSignSecret;
     }
 
     /**
      * User: Sweeper
      * Time: 2023/1/10 15:53
-     * @param string $robotSecret
+     * @param string $robotSignSecret
      * @return $this
      */
-    public function setRobotSecret(string $robotSecret): self
+    public function setRobotSignSecret(string $robotSignSecret): self
     {
-        $this->robotSecret = $robotSecret;
+        $this->robotSignSecret = $robotSignSecret;
 
         return $this;
     }
@@ -292,6 +309,7 @@ class Request extends ServiceRequest
      * 请求钉钉 accessToken
      * User: Sweeper
      * Time: 2023/1/10 11:22
+     * @doc https://open.dingtalk.com/document/orgapp/obtain-orgapp-token?spm=a2c6h.13066369.question.15.6305622076uBkv
      * @param string|null $appKey
      * @param string|null $appSecret
      * @return string|void|null
@@ -301,7 +319,27 @@ class Request extends ServiceRequest
         $appKey    = $appKey ?? $this->getAppKey();
         $appSecret = $appSecret ?? $this->getAppSecret();
 
-        return $this->get($this->buildRequestUri(static::GET_TOKEN_PATH), ['appkey' => $appKey, 'appsecret' => $appSecret])->getSuccessResponse();
+        return $this->get($this->buildRequestUri(static::GET_TOKEN_PATH, static::DING_TALK_URL), static::withQuery([
+            'appkey'    => $appKey,
+            'appsecret' => $appSecret,
+            // 'grant_type' => 'client_credential',
+        ]))->getSuccessResponse();
+    }
+
+    /**
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/10/13 12:43
+     * @doc https://open.dingtalk.com/document/orgapp/obtain-the-access_token-of-an-internal-app
+     * @param string|null $appKey
+     * @param string|null $appSecret
+     * @return mixed|null
+     */
+    private function obtainEnterpriseInternalApplicationAccessToken(string $appKey = null, string $appSecret = null)
+    {
+        $appKey    = $appKey ?? $this->getAppKey();
+        $appSecret = $appSecret ?? $this->getAppSecret();
+
+        return $this->get($this->buildRequestUri(static::GET_ACCESS_TOKEN_PATH), static::withQuery(compact('appKey', 'appSecret')))->getSuccessResponse();
     }
 
     /**
@@ -313,11 +351,11 @@ class Request extends ServiceRequest
     public function getAccessToken(): string
     {
         [$accessToken, $errors] = $this->getDataByHGet(static::DINGTALK_TOKEN_PREFIX, $this->getAgentId(), function() {
-            $response = $this->fetchAccessToken();
-            // $expiresIn   = $response['expires_in'] ?? 0;
-            // if ($response['errcode'] === 0) {
-            //     $this->setAccessToken($accessToken, $expiresIn);
-            // }
+            $response  = $this->fetchAccessToken();
+            $expiresIn = $response['expires_in'] ?? 0;
+            if ($response['errcode'] !== 0) {
+                throw new \LogicException($response['errmsg'] ?? '获取 ACCESS TOKEN 失败');
+            }
 
             return $response['access_token'] ?? '';
         }, 5, $this->getAccessTokenExpiresIn() - 60);
@@ -369,14 +407,14 @@ class Request extends ServiceRequest
      */
     protected function generateSignUrl(string $path): string
     {
-        $secret      = $this->getRobotSecret();
+        $secret      = $this->getRobotSignSecret();
         $accessToken = $this->getRobotAccessToken();
         if (!$secret || !$accessToken) {
             throw new \InvalidArgumentException('参数无效，请检查 Secret 及 AccessToken');
         }
         ['timestamp' => $timestamp, 'sign' => $sign] = $this->getSign($secret);
 
-        return $this->buildRequestUri("{$path}?access_token={$accessToken}&timestamp={$timestamp}&sign={$sign}");
+        return $this->buildRequestUri("{$path}?access_token={$accessToken}&timestamp={$timestamp}&sign={$sign}", static::DING_TALK_URL);
     }
 
     /**
