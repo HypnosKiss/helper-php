@@ -16,20 +16,20 @@ use Sweeper\HelperPhp\Tool\RedisClient;
  * DateTime: 2023/9/18 14:05
  * @Package \Sweeper\HelperPhp\Traits\Cache
  */
-trait Cache
+trait RedisCache
 {
 
     /** @var RedisClient Redis 处理器 */
-    private $handler;
+    private $redisHandler;
 
     /**
      * Author: Sweeper <wili.lixiang@gmail.com>
      * DateTime: 2023/9/18 14:05
      * @return \Sweeper\HelperPhp\Tool\RedisClient
      */
-    public function getHandler(): RedisClient
+    public function getRedisHandler(): RedisClient
     {
-        return $this->handler ?: RedisClient::instance();
+        return $this->redisHandler ?: RedisClient::instance();
     }
 
     /**
@@ -38,9 +38,9 @@ trait Cache
      * @param $handler
      * @return $this
      */
-    public function setHandler($handler): self
+    public function setRedisHandler($handler): self
     {
-        $this->handler = $handler;
+        $this->redisHandler = $handler;
 
         return $this;
     }
@@ -61,9 +61,9 @@ trait Cache
     public function getDataByHGet(string $cacheKey, string $cacheField, callable $getDataCallback, int $emptyDataExpire = 300, int $expire = 86400, bool $refresh = false, ...$args): array
     {
         $errors   = [];
-        $cacheKey = $this->getHandler()->generateKey($cacheKey);
+        $cacheKey = $this->getRedisHandler()->generateKey($cacheKey);
         try {
-            $cache     = $this->getHandler()->hGet($cacheKey, $cacheField) ?: '';
+            $cache     = $this->getRedisHandler()->hGet($cacheKey, $cacheField) ?: '';
             $cacheData = json_decode($cache, true) ?: [];
             if (!empty($cacheData['expire']) && $cacheData['expire'] <= time()) {// 校验过期时间，超过过期时间重新获取数据
                 $cacheData = [];                                                 // 置空，重新获取数据，再设置到当前缓存字段
@@ -76,7 +76,7 @@ trait Cache
             $cacheData['data']   = $getDataCallback(...$args) ?: [];
             $cacheData['expire'] = time() + (empty($cacheData['data']) ? $emptyDataExpire : $expire);
             try {
-                $this->getHandler()->hSet($cacheKey, $cacheField, json_encode($cacheData, JSON_UNESCAPED_UNICODE));
+                $this->getRedisHandler()->hSet($cacheKey, $cacheField, json_encode($cacheData, JSON_UNESCAPED_UNICODE));
             } catch (\Throwable $ex) {
                 $errors[] = "hSet exception:{$ex->getFile()}#{$ex->getLine()} ({$ex->getMessage()})";
             }

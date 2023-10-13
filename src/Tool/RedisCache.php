@@ -2,7 +2,7 @@
 
 namespace Sweeper\HelperPhp\Tool;
 
-use Sweeper\HelperPhp\Traits\Cache;
+use Sweeper\HelperPhp\Traits\RedisCache;
 
 /**
  * Redis Cache
@@ -14,5 +14,5 @@ use Sweeper\HelperPhp\Traits\Cache;
 class RedisCache
 {
 
-    use Cache;
+    use RedisCache;
 }

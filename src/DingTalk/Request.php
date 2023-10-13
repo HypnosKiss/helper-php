@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use Sweeper\GuzzleHttpRequest\HttpCode;
 use Sweeper\GuzzleHttpRequest\Response;
 use Sweeper\GuzzleHttpRequest\ServiceRequest;
-use Sweeper\HelperPhp\Traits\Cache;
+use Sweeper\HelperPhp\Traits\RedisCache;
 
 use function Sweeper\HelperPhp\get_microtime;
 use function Sweeper\HelperPhp\str_to_utf8;
@@ -21,7 +21,7 @@ use function Sweeper\HelperPhp\str_to_utf8;
 class Request extends ServiceRequest
 {
 
-    use Cache;
+    use RedisCache;
 
     /** @var string 钉钉OApi的url */
     public const DING_TALK_URL        = "https://oapi.dingtalk.com";
