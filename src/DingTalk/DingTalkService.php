@@ -15,14 +15,6 @@ use Sweeper\GuzzleHttpRequest\Response;
 class DingTalkService extends Request
 {
 
-    /** @var string[] 机器人配置映射 */
-    public const ROBOT_MAP = [
-        '机器人' => [
-            'secret'       => '',
-            'access_token' => '',
-        ],
-    ];
-
     /**
      * 获取钉钉的部门列表
      * User: Sweeper
@@ -155,5 +147,4 @@ class DingTalkService extends Request
 
         return $this->setRobotSignSecret($secret)->setRobotAccessToken($accessToken)->sendNotify($this->generateSignUrl('robot/send'), $message, $isAtAll, $messageData);
     }
-
 }

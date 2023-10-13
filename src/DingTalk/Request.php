@@ -24,20 +24,20 @@ class Request extends ServiceRequest
     use RedisCache;
 
     /** @var string 钉钉OApi的url */
-    public const DING_TALK_URL = "https://oapi.dingtalk.com";
+    public const DING_TALK_URL = 'https://oapi.dingtalk.com';
 
     /** @var string API 地址 */
-    public const DING_TALK_API_URL    = "https://api.dingtalk.com";
+    public const DING_TALK_API_URL    = 'https://api.dingtalk.com';
 
-    public const MSG_TYPE_TEXT        = "text";
+    public const MSG_TYPE_TEXT        = 'text';
 
-    public const MSG_TYPE_LINK        = "link";
+    public const MSG_TYPE_LINK        = 'link';
 
-    public const MSG_TYPE_MARKDOWN    = "markdown";
+    public const MSG_TYPE_MARKDOWN    = 'markdown';
 
-    public const MSG_TYPE_ACTION_CARD = "actionCard";
+    public const MSG_TYPE_ACTION_CARD = 'actionCard';
 
-    public const MSG_TYPE_FEED_CARD   = "feedCard";
+    public const MSG_TYPE_FEED_CARD   = 'feedCard';
 
     /** @var string 整体跳转ActionCard类型 */
     public const  ACTION_CARD_WHOLE = 'whole';
@@ -442,6 +442,32 @@ class Request extends ServiceRequest
     }
 
     /**
+     * 格式化 AT 内容
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/10/13 14:02
+     * @param array $atMobiles
+     * @param array $atUserIds
+     * @param bool  $wordWrap 自动换行
+     * @return string
+     */
+    public static function formatAtText(array $atMobiles = [], array $atUserIds = [], bool $wordWrap = true)
+    {
+        $atText = '';
+        foreach ($atMobiles as $atMobile) {
+            $atText .= "@{$atMobile}";
+        }
+        foreach ($atUserIds as $atUserId) {
+            $atText .= "@{$atUserId}";
+        }
+
+        if ($wordWrap) {
+            $atText = '</br>' . PHP_EOL . $atText . '</br>' . PHP_EOL;
+        }
+
+        return $atText;
+    }
+
+    /**
      * 生成 text 格式消息数据
      * User: Sweeper
      * Time: 2023/1/11 19:37
@@ -454,12 +480,7 @@ class Request extends ServiceRequest
     public static function generateTextData(string $content, bool $isAtAll = false, array $atMobiles = [], array $atUserIds = []): array
     {
         $format = static::MSG_TYPE_FORMAT[static::MSG_TYPE_TEXT];
-        foreach ($atMobiles as $atMobile) {
-            $content .= "@{$atMobile}";
-        }
-        foreach ($atUserIds as $atUserId) {
-            $content .= "@{$atUserId}";
-        }
+        $text   .= static::formatAtText($atMobiles, $atUserIds);
 
         return array_replace_recursive($format, [
             'text' => [
@@ -511,12 +532,7 @@ class Request extends ServiceRequest
     public static function generateMarkdownData(string $title, string $text, bool $isAtAll = false, array $atMobiles = [], array $atUserIds = []): array
     {
         $format = static::MSG_TYPE_FORMAT[static::MSG_TYPE_MARKDOWN];
-        foreach ($atMobiles as $atMobile) {
-            $text .= "@{$atMobile}";
-        }
-        foreach ($atUserIds as $atUserId) {
-            $text .= "@{$atUserId}";
-        }
+        $text   .= static::formatAtText($atMobiles, $atUserIds);
 
         return array_replace_recursive($format, [
             'markdown' => [
