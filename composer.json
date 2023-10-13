@@ -42,6 +42,14 @@
     "autoload": {
         "psr-4": {
             "Sweeper\\HelperPhp\\": "src/"
+        },
+        "files": [
+            "src/helper.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "test"
         }
     },
     "config": {

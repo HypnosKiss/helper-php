@@ -11,10 +11,10 @@ use Sweeper\HelperPhp\Tool\RedisClient;
 
 /**
  * 缓存通用特征
- * Created by PhpStorm.
+ * Created by Sweeper PhpStorm.
  * Author: Sweeper <wili.lixiang@gmail.com>
- * DateTime: 2023/9/18 14:05
- * @Package \Sweeper\HelperPhp\Traits\Cache
+ * DateTime: 2023/10/13 11:41
+ * @Package \Sweeper\HelperPhp\Traits\RedisCache
  */
 trait RedisCache
 {
