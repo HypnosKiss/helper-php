@@ -32,14 +32,16 @@
  * Copyright (c) 2023 by ${git_name} email: ${git_email}, All Rights Reserved.
  */
 
+namespace Sweeper\Test;
+
 use Sweeper\HelperPhp\Traits\LogTrait;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-class Log
+class LogTest
 {
-    use LogTrait;
 
+    use LogTrait;
 
     /**
      * 测试日志记录
@@ -50,7 +52,8 @@ class Log
         $this->setLogPath(__DIR__ . '/log')->setFilename('test');
         $this->info('test log message', ['todo' => 'some message']);
     }
+
 }
 
-$log = new Log();
+$log = new LogTest();
 $log->testLog();
