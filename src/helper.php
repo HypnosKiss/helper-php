@@ -2,9 +2,14 @@
 
 namespace Sweeper\HelperPhp;
 
+use app\common\model\CollectLinkQueueModel;
+use think\Request;
+use ZipArchive;
+
 use function Sweeper\HelperPhp\Func\array_clear_empty;
 use function Sweeper\HelperPhp\Func\format_size;
 use function Sweeper\HelperPhp\Func\resolve_size;
+use function Sweeper\HelperPhp\Func\time_range_v;
 
 /**
  * Created by PhpStorm.
@@ -58,6 +63,28 @@ if (!function_exists('multidimensional_array_merge')) {
         });
 
         return $array;
+    }
+}
+
+if (!function_exists('array_merge_to_one')) {
+    /**
+     * 多维数组转化为一维数组
+     * @param array $array
+     * @param bool  $arrayClearEmpty
+     * @return array
+     */
+    function array_merge_to_one(array $array, bool $arrayClearEmpty = true): array
+    {
+        $newArray = [];
+        foreach ($array as $item) {
+            if (is_array($item)) {
+                $newArray = array_merge($newArray, array_merge_rec($item));
+            } else {
+                $newArray[] = $item;
+            }
+        }
+
+        return $arrayClearEmpty ? array_clear_empty($newArray) : $newArray;
     }
 }
 
@@ -863,133 +890,147 @@ if (!function_exists('string_to_array')) {
     }
 }
 
-/**
- * 是命令行模式
- * User: Sweeper
- * Time: 2023/9/10 10:41
- * @return bool
- */
-function in_cli(): bool
-{
-    return PHP_SAPI === 'cli';
+if (!function_exists('is_cli')) {
+    /**
+     * 是命令行模式
+     * User: Sweeper
+     * Time: 2023/9/10 10:41
+     * @return bool
+     */
+    function is_cli(): bool
+    {
+        return PHP_SAPI === 'cli';
+    }
 }
 
-/**
- * 是 Windows
- * User: Sweeper
- * Time: 2023/9/10 10:41
- * @return bool
- */
-function in_windows(): bool
-{
-    return stripos(PHP_OS_FAMILY, 'WIN') === 0;
+if (!function_exists('is_windows')) {
+    /**
+     * 是 Windows
+     * User: Sweeper
+     * Time: 2023/9/10 10:41
+     * @return bool
+     */
+    function is_windows(): bool
+    {
+        return stripos(PHP_OS_FAMILY, 'WIN') !== false;
+    }
 }
 
-/**
- * 服务器最大上传文件大小
- * 通过对比文件上传限制与post大小获取
- * @param bool $humanReadable 是否以可读方式返回
- * @return int
- */
-function get_upload_max_size(bool $humanReadable = false): int
-{
-    $upload_sz = trim(ini_get('upload_max_filesize'));
-    $upload_sz = resolve_size($upload_sz);
-    $post_sz   = trim(ini_get('post_max_size'));
-    $post_sz   = resolve_size($post_sz);
-    $ret       = min($upload_sz, $post_sz);
-    if ($humanReadable) {
-        return format_size($ret);
-    }
+if (!function_exists('get_upload_max_size')) {
 
-    return $ret;
+    /**
+     * 服务器最大上传文件大小
+     * 通过对比文件上传限制与post大小获取
+     * @param bool $humanReadable 是否以可读方式返回
+     * @return int
+     */
+    function get_upload_max_size(bool $humanReadable = false): int
+    {
+        $upload_sz = trim(ini_get('upload_max_filesize'));
+        $upload_sz = resolve_size($upload_sz);
+        $post_sz   = trim(ini_get('post_max_size'));
+        $post_sz   = resolve_size($post_sz);
+        $ret       = min($upload_sz, $post_sz);
+        if ($humanReadable) {
+            return format_size($ret);
+        }
+
+        return $ret;
+    }
 }
 
-/**
- * get phpinfo() as array
- * @return array
- */
-function get_php_info(): array
-{
-    static $phpinfo;
-    if ($phpinfo) {
-        return $phpinfo;
-    }
+if (!function_exists('get_php_info')) {
+    /**
+     * get phpinfo() as array
+     * @return array
+     */
+    function get_php_info(): array
+    {
+        static $phpinfo;
+        if ($phpinfo) {
+            return $phpinfo;
+        }
 
-    $entitiesToUtf8 = function($input) {
-        return preg_replace_callback('/(&#[0-9]+;)/', function($m) {
-            return mb_convert_encoding($m[1], 'UTF-8', 'HTML-ENTITIES');
-        }, $input);
-    };
-    $plainText      = function($input) use ($entitiesToUtf8) {
-        return trim(html_entity_decode($entitiesToUtf8(strip_tags($input))));
-    };
-    $titlePlainText = function($input) use ($plainText) {
-        return '# ' . $plainText($input);
-    };
+        $entitiesToUtf8 = function($input) {
+            return preg_replace_callback('/(&#[0-9]+;)/', function($m) {
+                return mb_convert_encoding($m[1], 'UTF-8', 'HTML-ENTITIES');
+            }, $input);
+        };
+        $plainText      = function($input) use ($entitiesToUtf8) {
+            return trim(html_entity_decode($entitiesToUtf8(strip_tags($input))));
+        };
+        $titlePlainText = function($input) use ($plainText) {
+            return '# ' . $plainText($input);
+        };
 
-    ob_start();
-    phpinfo(-1);
+        ob_start();
+        phpinfo(-1);
 
-    $phpinfo = ['phpinfo' => []];
+        $phpinfo = ['phpinfo' => []];
 
-    // Strip everything after the <h1>Configuration</h1> tag (other h1's)
-    if (!preg_match('#(.*<h1[^>]*>\s*Configuration.*)<h1#s', ob_get_clean(), $matches)) {
-        return [];
-    }
+        // Strip everything after the <h1>Configuration</h1> tag (other h1's)
+        if (!preg_match('#(.*<h1[^>]*>\s*Configuration.*)<h1#s', ob_get_clean(), $matches)) {
+            return [];
+        }
 
-    $input   = $matches[1];
-    $matches = [];
+        $input   = $matches[1];
+        $matches = [];
 
-    if (preg_match_all('#(?:<h2.*?>(?:<a.*?>)?(.*?)(?:<\/a>)?<\/h2>)|' . '(?:<tr.*?><t[hd].*?>(.*?)\s*</t[hd]>(?:<t[hd].*?>(.*?)\s*</t[hd]>(?:<t[hd].*?>(.*?)\s*</t[hd]>)?)?</tr>)#s', $input, $matches, PREG_SET_ORDER)) {
-        foreach ($matches as $match) {
-            $fn = strpos($match[0], '<th') === false ? $plainText : $titlePlainText;
-            if (strlen($match[1])) {
-                $phpinfo[$match[1]] = [];
-            } elseif (isset($match[3])) {
-                $keys1                                = array_keys($phpinfo);
-                $phpinfo[end($keys1)][$fn($match[2])] = isset($match[4]) ? [$fn($match[3]), $fn($match[4])] : $fn($match[3]);
-            } else {
-                $keys1                  = array_keys($phpinfo);
-                $phpinfo[end($keys1)][] = $fn($match[2]);
+        if (preg_match_all('#(?:<h2.*?>(?:<a.*?>)?(.*?)(?:<\/a>)?<\/h2>)|' . '(?:<tr.*?><t[hd].*?>(.*?)\s*</t[hd]>(?:<t[hd].*?>(.*?)\s*</t[hd]>(?:<t[hd].*?>(.*?)\s*</t[hd]>)?)?</tr>)#s', $input, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $fn = strpos($match[0], '<th') === false ? $plainText : $titlePlainText;
+                if (strlen($match[1])) {
+                    $phpinfo[$match[1]] = [];
+                } elseif (isset($match[3])) {
+                    $keys1                                = array_keys($phpinfo);
+                    $phpinfo[end($keys1)][$fn($match[2])] = isset($match[4]) ? [$fn($match[3]), $fn($match[4])] : $fn($match[3]);
+                } else {
+                    $keys1                  = array_keys($phpinfo);
+                    $phpinfo[end($keys1)][] = $fn($match[2]);
+                }
             }
         }
-    }
 
-    return $phpinfo;
+        return $phpinfo;
+    }
 }
 
-/**
- * get php core summary released info
- * @return string
- */
-function get_php_release_summary(): string
-{
-    $info     = get_php_info();
-    $ts       = $info['phpinfo']['Thread Safety'] === 'enabled' ? 'ts' : 'nts';
-    $compiler = $info['phpinfo']['Compiler'];
-    if (preg_match('/ms(vc\d+)\s/i', $compiler, $matches)) {
-        $compiler = strtolower($matches[1]);
-    }
+if (!function_exists('get_php_release_summary')) {
 
-    return implode('-', [PHP_VERSION, $ts, $compiler, $info['phpinfo']['Architecture']]);
+    /**
+     * get php core summary released info
+     * @return string
+     */
+    function get_php_release_summary(): string
+    {
+        $info     = get_php_info();
+        $ts       = $info['phpinfo']['Thread Safety'] === 'enabled' ? 'ts' : 'nts';
+        $compiler = $info['phpinfo']['Compiler'];
+        if (preg_match('/ms(vc\d+)\s/i', $compiler, $matches)) {
+            $compiler = strtolower($matches[1]);
+        }
+
+        return implode('-', [PHP_VERSION, $ts, $compiler, $info['phpinfo']['Architecture']]);
+    }
 }
 
-/**
- * 获取最大socket可用超时时间
- * @param int $ttf 允许提前时长
- * @return int 超时时间（秒），如为0，表示不限制超时时间
- */
-function get_max_socket_timeout(int $ttf = 0): int
-{
-    $max_execute_timeout = ini_get('max_execution_time') ?: 0;
-    $max_socket_timeout  = ini_get('default_socket_timeout') ?: 0;
-    $max                 = (!$max_execute_timeout || !$max_socket_timeout) ? max($max_execute_timeout, $max_socket_timeout) : min($max_execute_timeout, $max_socket_timeout);
-    if ($ttf && $max) {
-        return max($max - $ttf, 1); //最低保持1s，避免0值
-    }
+if (!function_exists('get_max_socket_timeout')) {
+    /**
+     * 获取最大socket可用超时时间
+     * @param int $ttf 允许提前时长
+     * @return int 超时时间（秒），如为0，表示不限制超时时间
+     */
+    function get_max_socket_timeout(int $ttf = 0): int
+    {
+        $max_execute_timeout = ini_get('max_execution_time') ?: 0;
+        $max_socket_timeout  = ini_get('default_socket_timeout') ?: 0;
+        $max                 = (!$max_execute_timeout || !$max_socket_timeout) ? max($max_execute_timeout, $max_socket_timeout) : min($max_execute_timeout, $max_socket_timeout);
+        if ($ttf && $max) {
+            return max($max - $ttf, 1); //最低保持1s，避免0值
+        }
 
-    return $max;
+        return $max;
+    }
 }
 
 if (!function_exists('get_file_permission')) {
@@ -1107,5 +1148,460 @@ if (!function_exists('send_ding_talk_message')) {
         curl_close($ch);
 
         return (bool)$output;
+    }
+}
+
+if (!function_exists('html2text')) {
+    /**
+     * 转换html为txt文本的函数
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/10/22 18:45
+     * @param string $str
+     * @param string $encode
+     * @return string|string[]|null
+     */
+    function html2text(string $str, string $encode = 'UTF-8')
+    {
+        $str       = preg_replace('/<style .*?<\/style>/is', '', $str);
+        $str       = preg_replace('/<script .*?<\/script>/is', '', $str);
+        $str       = preg_replace('/<br \s*\/?\/>/i', "\n", $str);
+        $str       = preg_replace('/<br>/i', "\n", $str);
+        $str       = preg_replace('/<br\/>/i', "\n", $str);
+        $str       = preg_replace('/<\/p>/i', "\n", $str);
+        $str       = preg_replace('/<\/td>/i', "\n", $str);
+        $str       = preg_replace('/<\/div>/i', "\n", $str);
+        $str       = preg_replace('/<\/blockquote>/i', "\n", $str);
+        $str       = preg_replace('/<\/li>/i', "\n", $str);
+        $str       = preg_replace('/\&nbsp\;/i', ' ', $str);
+        $str       = preg_replace('/\&nbsp/i', ' ', $str);
+        $str       = preg_replace('/\&amp\;/i', '&', $str);
+        $str       = preg_replace('/\&amp/i', '&', $str);
+        $str       = preg_replace('/\&ldquo\;/i', '"', $str);
+        $str       = preg_replace('/\&ldquo/i', '"', $str);
+        $str       = preg_replace('/\&lsquo\;/i', "'", $str);
+        $str       = preg_replace('/\&lsquo/i', "'", $str);
+        $str       = preg_replace('/\&rsquo\;/i', "'", $str);
+        $str       = preg_replace('/\&rsquo/i', "'", $str);
+        $str       = preg_replace('/\&gt\;/i', '>', $str);
+        $str       = preg_replace('/\&gt/i', '>', $str);
+        $str       = preg_replace('/\&rdquo\;/i', '"', $str);
+        $str       = preg_replace('/\&rdquo/i', '"', $str);
+        $allowtags = 'img|font|div|table|tbody|tr|td|th|br|p|b|strong|i|u|em|span|ol|ul|li';
+        $str       = preg_replace("/<(\/?($allowtags).*?)>/is", '', $str);
+        $str       = htmlspecialchars($str);
+        $str       = strip_tags($str);
+        $str       = html_entity_decode($str, ENT_QUOTES, $encode);
+        $str       = preg_replace('/\&\#.*?\;/i', '', $str);
+
+        return $str;
+    }
+}
+
+if (!function_exists('mb_detect_convert_encoding')) {
+    /**
+     * 将 string 类型 str 的字符编码从可选的 $fromEncoding 转换到 $toEncoding
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/10/25 17:32
+     * @param string            $str          要编码的 string。
+     * @param string            $toEncoding   要转换成的编码类型。
+     * @param string|array|null $fromEncoding 在转换前通过字符代码名称来指定。它可以是一个 array 也可以是逗号分隔的枚举列表。 如果没有提供 from_encoding，则会使用内部（internal）编码。
+     * @return string
+     */
+    function mb_detect_convert_encoding(string $str, string $toEncoding = 'UTF-8', $fromEncoding = null): string
+    {
+        return mb_convert_encoding($str, $toEncoding, $fromEncoding ?: mb_detect_encoding($str));
+    }
+}
+
+if (!function_exists('get_process_memory')) {
+    /**
+     * 获取进程内存信息
+     * @param $pid
+     * @return string
+     */
+    function get_process_memory($pid): string
+    {
+        if (is_windows()) {
+            exec("tasklist | findstr {$pid}", $outputs);
+            $info   = array_values(array_clear_empty(explode(' ', current($outputs))));
+            $memory = $info[4] . ' ' . $info[5];
+        } else {
+            exec("cat /proc/{$pid}/status | grep VmRSS", $outputs);
+            $output = trim(current($outputs));
+            $memory = trim(explode(':', $output)[1]);
+        }
+
+        return $memory;
+    }
+}
+
+if (!function_exists('parse_command')) {
+    /**
+     * 解析命令->获取参数值【【解析等号连接格式的命令：-x="xx"】】
+     * @param array  $params
+     * @param string $delimiter
+     * @return array
+     */
+    function parse_command(array $params = [], string $delimiter = '='): array
+    {
+        $params = $params ?: $_SERVER['argv'];
+        if (is_file($params[0])) {
+            array_shift($params);//去除文件名
+        }
+        $tmp = [];
+        foreach ($params as $val) {
+            [$key, $val] = explode($delimiter, $val);// --0['xx']='xx';
+            $is_array = substr_count($key, '-') > 1;
+            $key      = ltrim($key, '-');
+            if ($is_array) {
+                preg_replace_callback('/(?:\[)(.*)(?:\])/i', function($matches) use (&$tmp, $key, $val) {
+                    [$org_val, $match_val] = $matches;// 通常: $matches[0]是完成的匹配 $matches[1]是第一个捕获子组的匹配 以此类推...
+                    $index                   = str_replace($org_val, '', $key);
+                    $tmp[$index][$match_val] = $val;
+                }, $key);
+            } else {
+                $tmp[$key] = $val;
+            }
+        }
+
+        return $tmp;
+    }
+}
+
+if (!function_exists('parse_args')) {
+    /**
+     * 返回传递给当前脚本的参数的数组【解析空格连接格式的命令：-x "xx"】
+     * @param array $params
+     * @return array
+     */
+    function parse_args(array $params = []): array
+    {
+        $args = [];
+        $argv = $params ?: $_SERVER['argv'];
+        $max  = count($argv);
+        for ($i = 0; $i < $max; $i++) {
+            if (strpos($argv[$i], '-') === 0) {
+                $args[str_replace('-', '', $argv[$i])] = $argv[$i + 1];
+                $i++;//跳过后一个字符串（已作为值处理）
+            } else {
+                $args[] = $argv[$i];
+            }
+        }
+
+        return $args;
+    }
+}
+
+if (!function_exists('build_command')) {
+    /**
+     * 构建命令->参数组装
+     * @param string $cmdLine
+     * @param array  $params
+     * @param string $delimiter
+     * @return string
+     */
+    function build_command(string $cmdLine, array $params = [], string $delimiter = '='): string
+    {
+        foreach ($params as $k => $val) {
+            if (is_array($val)) {
+                foreach ($val as $i => $vi) {
+                    $cmdLine .= " --{$k}[{$i}]" . $delimiter . escapeshellarg($vi);
+                }
+            } else {
+                $cmdLine .= " -{$k}" . $delimiter . escapeshellarg($val);
+            }
+        }
+
+        return $cmdLine;
+    }
+}
+
+if (!function_exists('run_command')) {
+    /**
+     * 运行命令，并获取命令输出（直至进程结束）
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/10/22 23:41
+     * @param string $command
+     * @param array  $param
+     * @return string|null
+     * @throws \Exception
+     */
+    function run_command(string $command, array $param = [], array &$pipes = [], $cwd = null, array $env = null, array $other_options = null): ?string
+    {
+        $descriptors_pec = [
+            0 => ['pipe', 'r'],   // stdin is a pipe that the child will read from
+            1 => ['pipe', 'w'],   // stdout is a pipe that the child will write to
+            2 => ['pipe', 'w'],    // stderr is a pipe that the child will write to
+        ];
+        flush();
+        //WINDOWS环境：必须传递 $_SERVER给子进程，否则子进程内数据库连接可能出错 ？？
+        $command = build_command($command, $param);
+        $process = proc_open($command, $descriptors_pec, $pipes, $cwd ?? realpath('./'), $env ?? $_SERVER, $other_options);
+        if ($process === false || $process === null) {
+            throw new \RuntimeException('Process create fail:' . $command);
+        }
+        if (is_resource($process)) {
+            $result_str = $error_str = '';
+            while ($s = fgets($pipes[1])) {
+                $result_str .= $s;
+            }
+            $has_error = false;
+            while ($e = fgets($pipes[2])) {
+                $has_error = true;
+                $error_str .= $e;
+            }
+
+            return $has_error ? $error_str : $result_str;
+        }
+        proc_close($process);
+
+        return null;
+    }
+}
+
+if (!function_exists('psku_to_sku')) {
+    /**
+     * 通过PSKU转SKU格式
+     * @param string $psku
+     * @param string $flag
+     * @return string
+     */
+    function psku_to_sku(string $psku, string $flag = ''): string
+    {
+        $sku = $psku;
+        if (strtolower($flag) === 'shopee') {
+            preg_match('/(?:\[)(.*)(?:\])/i', $sku, $result);
+            if (!empty($result)) {
+                $search = $result[0];
+                $sku    = str_replace($search, '', $sku);
+            }
+            if (strpos($sku, '#') !== false) {
+                $sku = substr($sku, strpos($sku, '#') + 1);
+            }
+        } else {
+            if (preg_match('/(.*)#(.*)#(.*)$/', $sku, $match)) {
+                return $match[2];
+            }
+
+            if (preg_match('/(.*)#(.*)$/', $sku, $match)) {
+                return (strlen($match[1]) > strlen($match[2])) ? $match[1] : $match[2];
+            }
+        }
+
+        return $sku;
+    }
+}
+
+if (!function_exists('generate_psku')) {
+    /**
+     * 通过PSKU变形
+     * @param string $sku
+     * @param string $flag
+     * @param string $accountName
+     * @return string
+     */
+    function generate_psku(string $sku, string $flag = '', string $accountName = ''): string
+    {
+        if (strtolower($flag) === 'shopee') {
+            $simpleName = substr($accountName, 0, 5);
+
+            return $simpleName . '#' . $sku . '[' . get_random_string(4) . ']';
+        }
+
+        return $sku . '#' . get_random_string(4);
+    }
+}
+
+if (!function_exists('get_random_string')) {
+    /**
+     * 获取指定长度随机字符串
+     * @param $len
+     * @return string
+     */
+    function get_random_string($len): string
+    {
+        $len   = min($len, 32);
+        $chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678';
+        /****默认去掉了容易混淆的字符oOLl,9gq,Vv,Uu,I1****/
+        $maxPos = strlen($chars);
+        $pwd    = '';
+        for ($i = 0; $i < $len; $i++) {
+            $random = 0 + mt_rand() / mt_getrandmax() * 1;
+            $pwd    .= $chars[floor($random * $maxPos)];
+        }
+
+        return $pwd;
+    }
+}
+
+if (!function_exists('get_tasks_progress_text')) {
+    /**
+     * 获取任务进度描述文本，格式为：
+     * 当前函数为独占函数
+     * @param int    $currentIndex 当前处理序号
+     * @param int    $total        总数
+     * @param string $format       格式表达
+     * @return string
+     */
+    function get_tasks_progress_text(int $currentIndex, int $total, string $format = "\n%NOW_DATE %NOW_TIME [PG:%PROGRESS RT:%REMAINING_TIME]"): string
+    {
+        static $start_time;
+        if (!$start_time) {
+            $start_time = time();
+        }
+
+        $now_date = date('Y/m/d');
+        $now_time = date('H:i:s');
+        $progress = "$currentIndex/$total";
+
+        $remaining_time = '-';
+        if ($currentIndex) {
+            $rt             = (time() - $start_time) * ($total - $currentIndex) / $currentIndex;
+            $remaining_time = time_range_v($rt);
+        }
+
+        return str_replace(['%NOW_DATE', '%NOW_TIME', '%PROGRESS', '%REMAINING_TIME'], [$now_date, $now_time, $progress, $remaining_time], $format);
+    }
+}
+
+if (!function_exists('add_files_to_zip')) {
+    /**
+     * 添加文件到ZIP压缩包
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/1 13:09
+     * @param \ZipArchive $zipArchive  压缩包
+     * @param string      $sourceDir   资源目录
+     * @param string      $zipPath     压缩包路径
+     * @param bool        $addEmptyDir 添加空目录
+     * @return void
+     */
+    function add_files_to_zip(\ZipArchive $zipArchive, string $sourceDir, string $zipPath, bool $addEmptyDir = true)
+    {
+        $handle = opendir($sourceDir);
+        while (false !== ($file = readdir($handle))) {
+            if ($file !== '.' && $file !== '..') {
+                $filePath     = $sourceDir . '/' . $file;
+                $relativePath = $addEmptyDir ? $zipPath . '/' . $file : $file;
+                if (is_file($filePath)) {
+                    $zipArchive->addFile($filePath, $relativePath);
+                } elseif (is_dir($filePath)) {
+                    add_files_to_zip($zipArchive, $filePath, $relativePath, $addEmptyDir);
+                }
+            }
+        }
+        @closedir($handle);
+    }
+}
+
+if (!function_exists('delete_dir')) {
+    /**
+     * 删除当前目录及其目录下的所有目录和文件
+     * @param string $path 待删除的目录
+     * @note  $path路径结尾不要有斜杠/(例如:正确[$path='./static/image'],错误[$path='./static/image/'])
+     */
+    function delete_dir(string $path)
+    {
+
+        if (is_dir($path)) {
+            //扫描一个目录内的所有目录和文件并返回数组
+            $dirs = scandir($path);
+            foreach ($dirs as $dir) {
+                //排除目录中的当前目录(.)和上一级目录(..)
+                if ($dir !== '.' && $dir !== '..') {
+                    //如果是目录则递归子目录，继续操作
+                    $sonDir = $path . '/' . $dir;
+                    if (is_dir($sonDir)) {
+                        //递归删除
+                        delete_dir($sonDir);
+                        //目录内的子目录和文件删除后删除空目录
+                        @rmdir($sonDir);
+                    } else {
+                        //如果是文件直接删除
+                        @unlink($sonDir);
+                    }
+                }
+            }
+            @rmdir($path);
+        }
+    }
+}
+
+if (!function_exists('download_zip_file')) {
+    /**
+     * 把一个压缩包添加到另一个压缩包里
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/1 14:36
+     * @param string $targetArchive 目标压缩包文件地址
+     * @param string $sourceArchive 源压缩包文件地址
+     * @param bool   $extractTo
+     * @param bool   $addEmptyDir
+     * @param bool   $download
+     * @return void
+     */
+    function download_zip_file(string $targetArchive, string $sourceArchive, bool $extractTo = false, bool $addEmptyDir = true, bool $download = true)
+    {
+        $extractDirs = [];
+        $targetDir   = dirname($targetArchive);// 文件保存路径
+        $sourceDir   = dirname($sourceArchive);// 源文件路径
+        if (!file_exists($targetDir) && !mkdir($targetDir, 0777, true) && !is_dir($targetDir)) {
+            throw new \RuntimeException(sprintf('Directory "%s" was not created', $targetDir));
+        }
+        // 打开/创建目标压缩文件
+        $targetZipArchive = new \ZipArchive();
+        $targetResult     = $targetZipArchive->open($targetArchive, \ZipArchive::CREATE|\ZipArchive::OVERWRITE);
+        if ($targetResult !== true) {// 检查文件是否成功打开
+            throw new \InvalidArgumentException('创建压缩文件失败，请稍后重试');
+        }
+        // 打开源压缩文件
+        $sourceZipArchive = new \ZipArchive();
+        $sourceResult     = $sourceZipArchive->open($sourceArchive);
+        if ($sourceResult !== true) {// 检查文件是否成功打开
+            throw new \InvalidArgumentException('无法打开源压缩文件');
+        }
+        $sourceFileCount = $sourceZipArchive->count();
+        if ($sourceFileCount < 1) {
+            throw new \LogicException('源压缩包没有文件');
+        }
+        try {
+            if ($extractTo) {
+                $destination = dirname($sourceArchive) . '/' . pathinfo($sourceArchive, PATHINFO_FILENAME);
+                $destination = str_replace('\\', '/', $destination);// realpath($destination)
+
+                $sourceZipArchive->extractTo($destination);
+
+                add_files_to_zip($targetZipArchive, $destination, '', $addEmptyDir);
+
+                $extractDirs[] = $destination;
+            } else {
+                // 循环遍历源压缩文件中的每个文件/目录
+                for ($i = 0; $i < $sourceFileCount; $i++) {
+                    $targetZipArchive->addFromString($sourceZipArchive->getNameIndex($i), $sourceZipArchive->getFromIndex($i));// 将当前文件/目录的内容写入目标压缩文件
+                }
+            }
+            $sourceZipArchive->close();// 关闭源压缩文件
+        } catch (\Throwable $ex) {
+            throw new \RuntimeException("{$ex->getFile()}#{$ex->getLine()} ({$ex->getMessage()})");
+        } finally {
+            $targetFileCount = $targetZipArchive->count();
+            if (!$targetFileCount) {
+                throw new \RuntimeException('打包压缩文件失败，压缩包没有添加文件');
+            }
+            $targetZipArchive->close();
+            foreach ($extractDirs as $extractToDestination) {
+                delete_dir($extractToDestination);// 删除解压的文件
+            }
+            if ($download) {
+                //如果不要下载，下面这段删掉即可，如需返回压缩包下载链接，只需 return $zipName;
+                header('Cache-Control: public');
+                header('Content-Description: File Transfer');
+                header('Content-disposition: attachment; filename=' . basename($targetArchive)); //文件名
+                header('Content-Type: application/zip');                                         //zip格式的
+                header('Content-Transfer-Encoding: binary');                                     //告诉浏览器，这是二进制文件
+                header('Content-Length: ' . filesize($targetArchive));                           //告诉浏览器，文件大小
+                @readfile($targetArchive);
+                @unlink($targetArchive);
+                exit('文件下载成功');
+            }
+        }
     }
 }

@@ -1,9 +1,6 @@
 <?php
 /**
  * 数组相关操作函数
- * User: sasumi
- * Date: 2015/2/28
- * Time: 14:35
  */
 
 namespace Sweeper\HelperPhp\Func;
@@ -845,3 +842,21 @@ function array_value_recursive(array $arr, string $key = '')
 
     return $val;
 }
+
+/**
+ * get first item of array
+ * @param array $data
+ * @param null &$key
+ * @return mixed|null
+ */
+function array_first(array $data = [], &$key = null)
+{
+    foreach ($data as $key => $item) {
+        return $item;
+    }
+
+    return null;
+}
+
+
+

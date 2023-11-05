@@ -1,9 +1,6 @@
 <?php
 /**
  * 文件相关操作函数
- * User: sasumi
- * Date: 2015/5/8
- * Time: 14:07
  */
 
 namespace Sweeper\HelperPhp\Func;
@@ -186,16 +183,14 @@ function get_dirs(string $dir): array
  */
 function session_start_once(): bool
 {
-    if (PHP_SAPI === 'cli' ||
-        session_status() === PHP_SESSION_DISABLED ||
-        headers_sent()) {
+    if (PHP_SAPI === 'cli' || session_status() === PHP_SESSION_DISABLED || headers_sent()) {
         return false;
     }
     $initialized = session_status() === PHP_SESSION_ACTIVE;
     if (!$initialized && !headers_sent()) {
         session_start();
         session_write_close();
-    };
+    }
 
     return true;
 }

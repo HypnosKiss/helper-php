@@ -29,17 +29,6 @@ class ConsoleOutput extends CommonAbstract
         LoggerLevel::EMERGENCY => ['cyan', null],
     ];
 
-    protected static $level_colors = [
-        LoggerLevel::DEBUG     => ['dark_gray', null],
-        LoggerLevel::INFO      => ['white', null],
-        LoggerLevel::NOTICE    => ['brown', null],
-        LoggerLevel::WARNING   => ['yellow', null],
-        LoggerLevel::ERROR     => ['red', null],
-        LoggerLevel::CRITICAL  => ['purple', null],
-        LoggerLevel::ALERT     => ['light_cyan', null],
-        LoggerLevel::EMERGENCY => ['cyan', null],
-    ];
-
     /**
      * ConsoleOutput constructor.
      * @param bool $colorless

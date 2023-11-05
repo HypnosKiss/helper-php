@@ -50,10 +50,10 @@ class LogTest
     public function testLog()
     {
         $this->setLogPath(__DIR__ . '/log')->setFilename('test');
-        $this->info('test log message', ['todo' => 'some message']);
+        $this->info('test log message', array_replace(['todo' => 'some message'], func_get_args()));
     }
 
 }
 
 $log = new LogTest();
-$log->testLog();
+$log->testLog($_SERVER['argv']);

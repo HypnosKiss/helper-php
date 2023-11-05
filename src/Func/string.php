@@ -1,9 +1,6 @@
 <?php
 /**
  * 字符串相关操作函数
- * User: sasumi
- * Date: 2015/3/30
- * Time: 11:19
  */
 
 namespace Sweeper\HelperPhp\Func;
