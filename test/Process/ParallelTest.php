@@ -5,7 +5,7 @@
  * DateTime: 2023/11/5 11:32
  */
 
-namespace Sweeper\Test\Process;
+namespace Sweeper\HelperPhp\Test\Process;
 
 use PHPUnit\Framework\TestCase;
 use Sweeper\HelperPhp\Process\Parallel;

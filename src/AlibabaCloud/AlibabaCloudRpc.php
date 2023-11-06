@@ -1,6 +1,6 @@
 <?php
 
-namespace Sweeper\HelperPhp\Alibaba;
+namespace Sweeper\HelperPhp\AlibabaCloud;
 
 use AlibabaCloud\Client\AlibabaCloud;
 use AlibabaCloud\Client\Exception\ClientException;

@@ -5,7 +5,7 @@
  * DateTime: 2023/11/5 0:52
  */
 
-namespace Sweeper\Test\Cache;
+namespace Sweeper\HelperPhp\Test\Cache;
 
 use Sweeper\HelperPhp\Cache\CacheFile;
 use PHPUnit\Framework\TestCase;

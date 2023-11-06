@@ -21,6 +21,7 @@
         "ext-json": "*",
         "ext-libxml": "*",
         "ext-mbstring": "*",
+        "ext-memcache": "*",
         "ext-mysqli": "*",
         "ext-openssl": "*",
         "ext-pcntl": "*",
@@ -56,7 +57,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Sweeper\\Test\\": "test"
+            "Sweeper\\HelperPhp\\Test\\": "test"
         }
     },
     "config": {

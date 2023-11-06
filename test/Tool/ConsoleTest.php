@@ -5,7 +5,7 @@
  * DateTime: 2023/11/5 1:35
  */
 
-namespace Sweeper\Test\Tool;
+namespace Sweeper\HelperPhp\Test\Tool;
 
 use PHPUnit\Framework\TestCase;
 use Sweeper\HelperPhp\Tool\Console;

@@ -160,7 +160,7 @@ class Logger extends AbstractLogger
      * @param bool        $dynamic
      * @return self
      */
-    public static function instance(string $id = null, array $config = [], string $alias = null, bool $dynamic = true): self
+    public static function instance(string $id = self::DEFAULT_LOG_ID, array $config = [], string $alias = null, bool $dynamic = true): self
     {
         return static::getInstance($id, $config, $alias, $dynamic);
     }

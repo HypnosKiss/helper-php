@@ -5,7 +5,7 @@
  * DateTime: 2023/11/5 1:20
  */
 
-namespace Sweeper\Test\Cache;
+namespace Sweeper\HelperPhp\Test\Cache;
 
 use PHPUnit\Framework\TestCase;
 use Sweeper\HelperPhp\Cache\CacheRedis;

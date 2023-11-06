@@ -32,7 +32,7 @@
  * Copyright (c) 2023 by ${git_name} email: ${git_email}, All Rights Reserved.
  */
 
-namespace Sweeper\Test;
+namespace Sweeper\HelperPhp\Test;
 
 use Sweeper\HelperPhp\Traits\LogTrait;
 
