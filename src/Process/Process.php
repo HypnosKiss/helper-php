@@ -46,20 +46,35 @@ class Process
     /** @var int */
     private $status_code;
 
+    /** @var array */
+    private $processInfo;
+
+    /** @var float 进程开始时间 */
+    private $startTime;
+
+    /** @var int 超时时间 */
+    private $timeout;
+
+    /** @var array */
+    private $options = ['suppress_errors' => true, 'bypass_shell' => true];
+
     /**
-     * @param string      $cmd        程序运行命令行
+     * @param string      $command    程序运行命令行
      * @param string|null $stdInInput 标准输入
      */
-    public function __construct(string $cmd, string $stdInInput = null)
+    public function __construct(string $command, string $cwd = null, array $env = null, string $stdInInput = null, float $timeout = 0)
     {
-        $this->command = $cmd;
+        if (!\function_exists('proc_open')) {
+            throw new \LogicException('The Process class relies on proc_open, which is not available on your PHP installation.');
+        }
+        $this->setStartTime(microtime(true))->setTimeout($timeout)->setCommand($command);
         $descriptors   = [
             self::STDIN  => ['pipe', self::FLAG_READ],
             self::STDOUT => ['pipe', self::FLAG_WRITE],
             self::STDERR => ['pipe', self::FLAG_WRITE],
         ];
         $pipes         = [];
-        $this->process = proc_open($this->command, $descriptors, $pipes, null, null, ['bypass_shell' => true]);
+        $this->process = @proc_open($this->command, $descriptors, $pipes, $cwd, $env, $this->getOptions());
 
         //set no blocking for IO
         stream_set_blocking($pipes[0], 0);
@@ -69,11 +84,15 @@ class Process
         if ($this->process === false || $this->process === null) {
             throw new \RunTimeException("Cannot create new process: $this->command");
         }
+        if (!\is_resource($this->process)) {
+            throw new \RuntimeException('Unable to launch a new process.');
+        }
         [$stdin, $this->stdout, $this->stderr] = $pipes;
         if ($stdInInput) {
             fwrite($stdin, $stdInInput);
         }
         fclose($stdin);
+        $this->updateStatus()->checkTimeout();
     }
 
     /**
@@ -85,7 +104,9 @@ class Process
     public function getProcessPid()
     {
         if ($this->process) {
-            return proc_get_status($this->process)['pid'];
+            $this->updateStatus();
+
+            return $this->getProcessSpecifyInfo('pid');
         }
 
         return null;
@@ -126,8 +147,8 @@ class Process
         if ($this->status_code !== null) {
             return false;
         }
-        $status = proc_get_status($this->process);
-        if ($status['running']) {
+        $this->updateStatus();
+        if ($this->getProcessSpecifyInfo('running')) {
             return true;
         }
 
@@ -143,13 +164,13 @@ class Process
         if ($this->status_code !== null) {
             return true;
         }
-        $status = proc_get_status($this->process);
-        if ($status['running']) {
+        $this->updateStatus();
+        if ($this->processInfo['running']) {
             return false;
         }
 
         if ($this->status_code === null) {
-            $this->status_code = (int)$status['exitcode'];
+            $this->status_code = (int)$this->processInfo['exitcode'];
         }
 
         // Process outputs
@@ -300,24 +321,224 @@ class Process
     /**
      * @param mixed|resource $stderr
      */
-    public function setStderr($stderr): void
+    public function setStderr($stderr): self
     {
         $this->stderr = $stderr;
+
+        return $this;
     }
 
-    public function setOutput(string $output): void
+    public function setOutput(string $output): self
     {
         $this->output = $output;
+
+        return $this;
     }
 
-    public function setErrorOutput(string $error_output): void
+    public function setErrorOutput(string $error_output): self
     {
         $this->error_output = $error_output;
+
+        return $this;
     }
 
-    public function setStatusCode(int $status_code): void
+    public function setStatusCode(int $status_code): self
     {
         $this->status_code = $status_code;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getOptions(): array
+    {
+        return $this->options;
+    }
+
+    /**
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/11 17:06
+     * @param array $options
+     * @return $this
+     */
+    public function setOptions(array $options): self
+    {
+        if ($this->isRunning()) {
+            throw new \RuntimeException('Setting options while the process is running is not possible.');
+        }
+
+        $defaultOptions  = $this->options;
+        $existingOptions = ['blocking_pipes', 'create_process_group', 'create_new_console'];
+
+        foreach ($options as $key => $value) {
+            if (!\in_array($key, $existingOptions, true)) {
+                $this->options = $defaultOptions;
+                throw new \LogicException(sprintf('Invalid option "%s" passed to "%s()". Supported options are "%s".', $key, __METHOD__, implode('", "', $existingOptions)));
+            }
+            $this->options[$key] = $value;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/11 17:06
+     * @return int
+     */
+    public function getTimeout(): int
+    {
+        return $this->timeout;
+    }
+
+    /**
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/11 17:05
+     * @param int $timeout
+     * @return $this
+     */
+    public function setTimeout(int $timeout): self
+    {
+        $this->timeout = $timeout;
+
+        return $this;
+    }
+
+    /**
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/11 17:05
+     * @return float
+     */
+    public function getStartTime(): float
+    {
+        return $this->startTime;
+    }
+
+    /**
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/11 17:06
+     * @param float $startTime
+     * @return $this
+     */
+    public function setStartTime(float $startTime): self
+    {
+        $this->startTime = $startTime;
+
+        return $this;
+    }
+
+    /**
+     * 获取进程指定信息
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/11 17:42
+     * @param string $key
+     * @return mixed|null
+     */
+    public function getProcessSpecifyInfo(string $key)
+    {
+        return $this->processInfo[$key] ?? null;
+    }
+
+    /**
+     * Updates the status of the process
+     */
+    protected function updateStatus(): self
+    {
+        $this->processInfo = proc_get_status($this->process);
+
+        return $this;
+    }
+
+    /**
+     * Waits for the process to terminate.
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/11 18:02
+     * @return int
+     */
+    public function wait(): int
+    {
+        $this->updateStatus();
+        do {
+            $this->checkTimeout();
+            $running = $this->isRunning();
+        } while ($running);
+
+        while ($this->isRunning()) {
+            $this->checkTimeout();
+            usleep(1000);
+        }
+
+        $this->status_code = (int)$this->processInfo['exitcode'];
+
+        return $this->status_code;
+    }
+
+    /**
+     * Waits for the process to terminate.
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/11 18:06
+     * @return bool
+     */
+    public function waitUntil(): bool
+    {
+        $this->updateStatus();
+        while (true) {
+            $this->checkTimeout();
+            $running = $this->isRunning();
+            if (!$running) {
+                return false;
+            }
+            usleep(1000);
+        }
+    }
+
+    /**
+     * 超时检测
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/11 17:56
+     * @return void
+     */
+    public function checkTimeout(): void
+    {
+        if ($this->getTimeout() && $this->getTimeout() < (microtime(true) - $this->getStartTime())) {
+            $this->stop(0);
+
+            throw new \RuntimeException(sprintf('The process "%s" exceeded the timeout of %s seconds.', $this->getCommand(), $this->getTimeout()));
+        }
+    }
+
+    /**
+     * Stops the process.
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/11 18:14
+     * @param int|float $timeout The timeout in seconds
+     * @return int|null
+     */
+    public function stop(float $timeout = 10): ?int
+    {
+        $timeoutMicro = microtime(true) + $timeout;
+        if ($this->isRunning()) {
+            do {
+                usleep(1000);
+            } while ($this->isRunning() && microtime(true) < $timeoutMicro);
+
+            if ($this->isRunning()) {
+                $this->terminate();
+            }
+        }
+
+        if ($this->isRunning()) {
+            if ($this->getProcessSpecifyInfo('pid')) {
+                return $this->stop(0);
+            }
+            $this->close();
+        }
+
+        $this->status_code = (int)$this->processInfo['exitcode'];
+
+        return $this->status_code;
     }
 
 }

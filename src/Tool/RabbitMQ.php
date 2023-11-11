@@ -9,6 +9,9 @@ namespace Sweeper\HelperPhp\Tool;
 
 use LogicException;
 use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Connection\AbstractConnection;
+use PhpAmqpLib\Connection\AMQPConnectionConfig;
+use PhpAmqpLib\Connection\AMQPConnectionFactory;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use Sweeper\DesignPattern\Traits\MultiPattern;
@@ -536,6 +539,106 @@ class RabbitMQ
         echo date('Y-m-d H:i:s'), ' [x] basic_get message total count：', $totalCount, PHP_EOL;
 
         return $totalCount;
+    }
+
+    /**
+     * 尝试创建 MQ 连接、通道
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/7 14:03
+     * @param array    $config
+     * @param array    $options
+     * @param int|null $channelId
+     * @return array      [$connect, $channel]
+     * @throws \Exception
+     * @example
+     * // if ($connect === null || $channel === null || !$connect->isConnected()) {
+     * //   [$connect, $channel] = static::tryCreateConnection([], ['keepalive' => true, 'heartbeat' => 60]);
+     * //   $this->warning('连接失效，重新初始化连接');
+     * // }
+     * // $connect->checkHeartBeat();
+     * // $this->error("Throwable Exception：{$e->getFile()}#{$e->getLine()} ({$e->getMessage()})");
+     * // # 如果是因为连接关闭，自动重连
+     * // if (strpos($e->getMessage(), 'Broken pipe or closed connection') !== false) {
+     * //     $this->warning('连接断开,开始重连');
+     * //     try{
+     * //         $connect->reconnect();
+     * //     } catch (\Throwable $ex){
+     * //         continue;
+     * //     }
+     * // }
+     */
+    public static function tryCreateConnection(array $config = [], array $options = [], int $channelId = null): array
+    {
+        if (!$config) {
+            throw new \InvalidArgumentException('Configuration cannot be empty', -1);
+        }
+        /** @var AMQPStreamConnection $connect */
+        $connect = AMQPStreamConnection::create_connection([$config], $options);
+        $channel = $connect->channel($channelId);
+
+        return [$connect, $channel];
+    }
+
+    /**
+     * 创建 MQ 连接、通道
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2023/11/8 9:40
+     * @param array|AMQPConnectionConfig $config
+     * @param array                      $options
+     * @param string                     $ioType
+     * @param int|null                   $channelId
+     * @return array [$connect, $channel]
+     */
+    public static function createConnection($config = [], array $options = [], string $ioType = AMQPConnectionConfig::IO_TYPE_STREAM, int $channelId = null): array
+    {
+        if (!$config) {
+            throw new \InvalidArgumentException('Configuration cannot be empty', -1);
+        }
+        if (!($config instanceof AMQPConnectionConfig) && is_array($config)) {
+            AMQPStreamConnection::validate_host($config);
+            // 配置信息
+            $host     = $config['host'];
+            $port     = $config['port'];
+            $user     = $config['user'];
+            $password = $config['password'];
+            $vhost    = $hostdef['vhost'] ?? '/';
+            // 选项信息
+            $options = array_filter(array_replace([
+                'insist'             => false,
+                'login_method'       => AMQPConnectionConfig::AUTH_AMQPPLAIN,
+                'login_response'     => null,
+                'locale'             => 'en_US',
+                'connection_timeout' => 3.0,
+                'read_write_timeout' => 3.0,
+                'keepalive'          => false,
+                'heartbeat'          => 0,
+            ], $options), static function($value) {
+                return null !== $value && $value !== '';
+            });
+            // 自动配置连接信息
+            $configure = new AMQPConnectionConfig();
+            $configure->setIoType($ioType);
+            $configure->setIsLazy(false);
+            $configure->setHost($host);
+            $configure->setPort($port);
+            $configure->setUser($user);
+            $configure->setPassword($password);
+            $configure->setVhost($vhost);
+            $configure->setInsist($options['insist'] ?? false);
+            $configure->setLoginMethod($options['login_method'] ?? AMQPConnectionConfig::AUTH_AMQPPLAIN);
+            $configure->setLocale($options['locale'] ?? 'en_US');
+            $configure->setConnectionTimeout($options['connection_timeout'] ?? 3.0);
+            $configure->setReadTimeout($options['read_write_timeout'] ?? 3.0);
+            $configure->setKeepalive($options['keepalive'] ?? false);
+            $configure->setHeartbeat($options['heartbeat'] ?? 0);
+        } else {
+            $configure = $config;
+        }
+
+        $connect = AMQPConnectionFactory::create($configure);
+        $channel = $connect->channel($channelId);
+
+        return [$connect, $channel];
     }
 
     //--------------------------------------------------------- example ---------------------------------------------------------
