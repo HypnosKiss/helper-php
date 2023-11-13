@@ -443,6 +443,16 @@ class Process
 
     /**
      * Updates the status of the process
+     * @doc https://www.php.net/manual/zh/function.proc-get-status.php
+     * proc_get_status
+     * command    string 传入 proc_open() 函数的命令行字符串。
+     * pid        int    进程 ID
+     * running    bool   true 表示进程还在运行中， false 表示进程已经终止
+     * signaled   bool   true 表示子进程被未捕获的信号所终止。 在 Windows 平台永远为 false。
+     * stopped    bool   true 表示子进程被信号停止。 在 Windows 平台永远为 false。
+     * exitcode   int    进程的退出码（仅在 running 为 false 时有意义）。 仅在第一次调用此函数时会返回实际的值， 后续的调用将返回 -1。
+     * termsig    int    导致子进程终止执行的信号值 （仅在 signaled 为 true 时有意义）。
+     * stopsig    int    导致子进程停止执行的信号值 （仅在 stopped 为 true 时有意义）。
      */
     protected function updateStatus(): self
     {

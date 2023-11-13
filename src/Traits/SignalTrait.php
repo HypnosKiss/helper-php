@@ -105,7 +105,7 @@ trait SignalTrait
      * 信号处理器
      * User: Sweeper
      * Time: 2023/8/21 18:04
-     * @return mixed
+     * @return void
      */
     abstract public function signalHandler(int $signal, $signalInfo);
 
