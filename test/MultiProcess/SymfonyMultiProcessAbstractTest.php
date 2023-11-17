@@ -15,7 +15,7 @@ use Symfony\Component\Process\Process;
 class SymfonyMultiProcess extends SymfonyMultiProcessAbstract
 {
 
-    public function executeTask()
+    public function executeTask(): void
     {
         $command = 'php -r "echo 123;"';
         $process = $this->createSlaveProcess($command);
@@ -27,13 +27,13 @@ class SymfonyMultiProcess extends SymfonyMultiProcessAbstract
 class SymfonyMultiProcessAbstractTest extends TestCase
 {
 
-    public function testSymfonyMultiProcessAbstract()
+    public function testSymfonyMultiProcessAbstract(): void
     {
         $process = new SymfonyMultiProcess(3);
         $process->run();
     }
 
-    protected function loop($processes)
+    protected function loop($processes): void
     {
         // 等待所有进程执行完毕
         while (count($processes) > 0) {
@@ -65,7 +65,7 @@ class SymfonyMultiProcessAbstractTest extends TestCase
      * @doc https://symfony.com/doc/current/components/process.html
      * @return void
      */
-    public function testProcess()
+    public function testProcess(): void
     {
         $data      = [10, 20, 30]; // 要处理的数据
         $processes = [];
@@ -93,7 +93,7 @@ class SymfonyMultiProcessAbstractTest extends TestCase
      * @doc https://symfony.com/doc/current/components/process.html
      * @return void
      */
-    public function testSymfonyProcess()
+    public function testSymfonyProcess(): void
     {
         $data      = [10, 20, 30]; // 要处理的数据
         $processes = [];

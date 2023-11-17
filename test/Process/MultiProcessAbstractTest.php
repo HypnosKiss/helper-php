@@ -16,7 +16,7 @@ require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 class MultiProcess extends MultiProcessAbstract
 {
 
-    public function executeTask()
+    public function executeTask(): void
     {
         $process                                       = new Process($this->buildCommand('php -r "echo 123;"'));
         $this->process_list[$process->getProcessPid()] = $process;
@@ -28,7 +28,7 @@ class MultiProcess extends MultiProcessAbstract
 class MultiProcessAbstractTest extends TestCase
 {
 
-    public function testMultiProcessAbstract()
+    public function testMultiProcessAbstract(): void
     {
         $process = new MultiProcess(3);
         $process->run();

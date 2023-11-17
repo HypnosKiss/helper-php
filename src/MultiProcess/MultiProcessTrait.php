@@ -3,17 +3,14 @@
 namespace Sweeper\HelperPhp\MultiProcess;
 
 use Exception;
-use Monolog\Logger;
 use ReflectionClass;
 use Sweeper\HelperPhp\Logger\Output\CommonAbstract;
 use Sweeper\HelperPhp\Process\Process;
 use Sweeper\HelperPhp\Tool\Hooker;
 use Sweeper\HelperPhp\Traits\LogTrait;
-
 use Sweeper\HelperPhp\Traits\SignalTrait;
 
 use function Sweeper\HelperPhp\Func\array_clear_empty;
-use function Sweeper\HelperPhp\Func\format_size;
 
 /**
  * 多进程
@@ -34,10 +31,10 @@ trait MultiProcessTrait
     private $cliInterpreter = 'php';
 
     /** @var bool 是否为 slave【子进程】 */
-    private $forked;
+    private $forked = false;
 
     /** @var string 子进程命令 */
-    private $slaveCommand;
+    private $slaveCommand = '';
 
     /** @var Process[] $processList 正在执行子进程列表 [taskId => process,...] */
     private $processList = [];
@@ -58,7 +55,7 @@ trait MultiProcessTrait
     private $processMaxRunningTime = 86400;
 
     /** @var null  标准输入，子进程从此管道中读取数据 */
-    private $stdInInput;
+    private $stdInInput = '';
 
     /** @var bool 启用信号调度 */
     private $enableSignalDispatch = false;
@@ -67,10 +64,10 @@ trait MultiProcessTrait
     private $logDir = 'multi_process_log';
 
     /** @var string 开始执行日期 $this->setStartExecuteDate('7:30')->setEndExecuteDate('23:05');// 只有7点30-23点05分执行任务。其余的时间不执行 */
-    private $startExecuteDate;
+    private $startExecuteDate = '';
 
     /** @var string 结束执行日期 $this->setStartExecuteDate('7:30')->setEndExecuteDate('23:05');// 只有7点30-23点05分执行任务。其余的时间不执行 */
-    private $endExecuteDate;
+    private $endExecuteDate = '';
 
     /** @var bool 自动执行任务 用于 start 开启任务 */
     private $autoExecuteTask = false;
@@ -155,42 +152,42 @@ trait MultiProcessTrait
 
     public static function getProcessTypeKey(): string
     {
-        return static::$processTypeKey;
+        return self::$processTypeKey;
     }
 
     public static function setProcessTypeKey(string $processTypeKey): void
     {
-        static::$processTypeKey = $processTypeKey;
+        self::$processTypeKey = $processTypeKey;
     }
 
     public static function getIdentifyMaster(): string
     {
-        return static::$identifyMaster;
+        return self::$identifyMaster;
     }
 
     public static function setIdentifyMaster(string $identifyMaster): void
     {
-        static::$identifyMaster = $identifyMaster;
+        self::$identifyMaster = $identifyMaster;
     }
 
     public static function getIdentifySlave(): string
     {
-        return static::$identifySlave;
+        return self::$identifySlave;
     }
 
     public static function setIdentifySlave(string $identifySlave): void
     {
-        static::$identifySlave = $identifySlave;
+        self::$identifySlave = $identifySlave;
     }
 
     public static function getDelimiter(): string
     {
-        return static::$delimiter;
+        return self::$delimiter;
     }
 
     public static function setDelimiter(string $delimiter): void
     {
-        static::$delimiter = $delimiter;
+        self::$delimiter = $delimiter;
     }
 
     public function getLogDir(): string
@@ -362,8 +359,8 @@ trait MultiProcessTrait
      */
     protected function addProcess(Process $process): self
     {
-        $index                                            = $this->getProcessCount() + 1;
-        $this->processList["$index#{$process->getPid()}"] = $process;
+        $index                                                   = $this->getProcessCount() + 1;
+        $this->processList["$index#{$process->getProcessPid()}"] = $process;
 
         return $this;
     }
@@ -529,7 +526,7 @@ trait MultiProcessTrait
      * 生成子进程命令
      * @return string
      */
-    private function _buildSlaveProcessCommand(): string
+    private function buildSlaveProcessCommand(): string
     {
         return $this->addSubprocessIdentify($this->getCliInterpreter() . ' ' . $_SERVER['SCRIPT_FILENAME']);
     }
@@ -540,7 +537,7 @@ trait MultiProcessTrait
      * DateTime: 2023/11/10 19:00
      * @return void
      */
-    private function _killAllBusySlaveProcess(): void
+    private function killAllBusySlaveProcess(): void
     {
         foreach ($this->getProcessList() as $taskId => $process) {
             $this->warning('The child process is closed.' . $this->outputLogContentAboutProcessId($this->getSlaveProcessIdContent($taskId)) . "CMD[{$process->getCommand()}]");
@@ -552,14 +549,15 @@ trait MultiProcessTrait
     /**
      * 循环检测子进程
      */
-    private function _loopSlaveProcess(): void
+    private function loopSlaveProcess(): void
     {
-        while ($this->_isBusy()) {
+        while ($this->isBusy()) {
+            $this->debug("Manager isBusy [{$this->getMaxProcessCount()}] loopSlaveProcess, Current number of process[{$this->getProcessCount()}], loop process");
             $this->loop();
-            if (!$this->_isBusy()) {
+            if (!$this->isBusy()) {
                 break; //有空闲的子进程数 跳出阻塞等待
             }
-            $this->isDebug() && $this->debug("Over the allowed max number of process[{$this->getMaxProcessCount()}],sleep {$this->getSleepMicroseconds()} microseconds");
+            $this->debug("Over the allowed max number of process[{$this->getMaxProcessCount()}],sleep {$this->getSleepMicroseconds()} microseconds");
             usleep($this->getSleepMicroseconds());
         }
     }
@@ -568,7 +566,7 @@ trait MultiProcessTrait
      * 繁忙检测
      * @return bool
      */
-    private function _isBusy(): bool
+    private function isBusy(): bool
     {
         return $this->getProcessCount() >= $this->getMaxProcessCount(); //当前总进程数 >= 最大进程数
     }
@@ -615,11 +613,11 @@ trait MultiProcessTrait
      * @return \Sweeper\HelperPhp\Process\Process
      * @throws \Exception
      */
-    private function _createSlaveProcess(string $commandline): Process
+    private function createProcess(string $commandline): Process
     {
         Hooker::fire(static::$EVENT_BEFORE_CREATE_PROCESS, $commandline);
         try {
-            $process = new Process($commandline, $this->getStdInInput());
+            $process = new Process($commandline, null, null, $this->getStdInInput(), $this->getProcessMaxRunningTime());
         } catch (\Throwable $ex) {
             $this->error($ex->getMessage());
             Hooker::fire(static::$EVENT_CREATE_PROCESS_FAIL, $ex, $commandline);
@@ -627,10 +625,10 @@ trait MultiProcessTrait
             exit(0);
         }
         Hooker::fire(static::$EVENT_AFTER_CREATE_PROCESS, $commandline, $process);
-        $taskId = $process->getPid();
+        $taskId = $process->getProcessPid();
         $this->attachProcess($process)->debug('create process success' . $this->outputLogContentAboutProcessId($this->getSlaveProcessIdContent($taskId)) . 'cmd:' . $commandline);
         //创建进程后、检测当前子进程数是否达到最大限制数 $this->max_process_count [达到最大限制需等待子进程结束再返回程序继续执行后续操作] 放在创建之前会导致不能及时检测到进程结束触发相应的事件
-        $this->_loopSlaveProcess(); //重试不再循环检测【当前已在循环中】多层检测会导致子进程已结束资源已释放这里还在循环检测
+        $this->loopSlaveProcess();  //重试不再循环检测【当前已在循环中】多层检测会导致子进程已结束资源已释放这里还在循环检测
         gc_collect_cycles();        //创建完子进程 -> 强制收集所有现存的垃圾循环周期
 
         return $process;
@@ -667,7 +665,7 @@ trait MultiProcessTrait
             }
             if ($timeoutMilliseconds > 0 && $sleep_milliseconds >= $timeoutMilliseconds) {
                 $this->debug("sleep($sleep_milliseconds) >= timeout($timeoutMilliseconds)," . "After more than {$timeoutMilliseconds} milliseconds will be forced to terminate unfinished tasks and return.");
-                $this->_killAllBusySlaveProcess();
+                $this->killAllBusySlaveProcess();
                 break;
             }
             usleep($this->getSleepMicroseconds());
@@ -703,7 +701,7 @@ trait MultiProcessTrait
      */
     final protected function killProcess(Process $process): void
     {
-        $pid = $process->getPid();//不存在的话会导致进程组所有进程都被杀死
+        $pid = $process->getProcessPid();//不存在的话会导致进程组所有进程都被杀死
         if ($pid && function_exists('posix_kill') && !posix_kill($pid, SIGKILL)) {//存在函数 posix_kill 且关闭进程失败
             $process->close();
         } else {
@@ -758,7 +756,7 @@ trait MultiProcessTrait
      */
     final protected function shutdownSlaveProcess(Process $process, bool $isAsync = false): bool
     {
-        $taskId = $process->getPid();
+        $taskId = $process->getProcessPid();
         $this->onSlaveShutdownBefore($process); //关闭 slave 之前事件
         $isAsync ? $process->terminate() : $process->close();
         $this->removeProcess($taskId);
@@ -793,7 +791,7 @@ trait MultiProcessTrait
             $this->shutdownMaster(10000); //关闭 master 进程
         }
 
-        return $this->_createSlaveProcess($this->buildCommand($this->getSlaveCommand(), func_get_args()));
+        return $this->createProcess($this->buildCommand($this->getSlaveCommand(), func_get_args()));
     }
 
     /**
@@ -808,7 +806,7 @@ trait MultiProcessTrait
             $this->shutdownMaster(10000); //关闭 master 进程
         }
 
-        return $this->_createSlaveProcess($this->_customCommandHandler($cmd));
+        return $this->createProcess($this->buildShellCommand($cmd));
     }
 
     /**
@@ -865,7 +863,8 @@ trait MultiProcessTrait
         }
         $tmp = [];
         foreach ($params as $val) {
-            [$key, $val] = explode(static::getDelimiter(), $val);// --0['xx']='xx';
+            $keyValMap = explode(static::getDelimiter(), $val);             // --0['xx']='xx';
+            [$key, $val] = isset($keyValMap[1]) ? $keyValMap : [$val, null];// --0['xx']='xx';
             $is_array = substr_count($key, '-') > 1;
             $key      = ltrim($key, '-');
             if ($is_array) {
@@ -926,6 +925,16 @@ trait MultiProcessTrait
     }
 
     /**
+     * 构建 Shell 命令
+     * @param string $command
+     * @return string
+     */
+    protected function buildShellCommand(string $command): string
+    {
+        return $this->addSubprocessIdentify($command); //添加子进程 KEY 标识
+    }
+
+    /**
      * 检测异步终止的进程
      * Author: Sweeper <wili.lixiang@gmail.com>
      * DateTime: 2023/11/12 0:22
@@ -947,7 +956,7 @@ trait MultiProcessTrait
      * @param string $cmd
      * @return string
      */
-    protected function _customCommandHandler(string $cmd): string
+    protected function buildCommandHandler(string $cmd): string
     {
         $tmp = explode(' ', $cmd); // php filename params_str
         if (!is_file($tmp[1])) {
@@ -965,7 +974,8 @@ trait MultiProcessTrait
     /**
      * 当用户想要中断进程时，INT 信号被进程的控制终端发送到进程
      */
-    public function signalInt(): void {
+    public function signalInt(): void
+    {
         $this->debug('Caught SIGINT...');
         $this->shutdownMaster(10000);//关闭 master 进程
     }
@@ -973,7 +983,8 @@ trait MultiProcessTrait
     /**
      * 发送到进程的 USR1 信号用于指示用户定义的条件
      */
-    public function signalUsr1(): void {
+    public function signalUsr1(): void
+    {
         $this->debug('Caught SIGUSR1...');
         $this->shutdownMaster();//关闭 master 进程
     }
@@ -981,7 +992,8 @@ trait MultiProcessTrait
     /**
      * 发送到进程的 USR2 信号用于指示用户定义的条件
      */
-    public function signalUsr2(): void {
+    public function signalUsr2(): void
+    {
         $this->debug('Caught SIGUSR2...');
         $this->shutdownMaster(600000);//关闭 master 进程
     }
@@ -994,7 +1006,10 @@ trait MultiProcessTrait
      * @param     $signalInfo
      * @return void
      */
-    public function signalHandler(int $signal, $signalInfo): void { }
+    public function signalHandler(int $signal, $signalInfo): void
+    {
+        $this->debug("Caught $signal...", compact('signalInfo'));
+    }
 
     /**
      * 执行任务
@@ -1002,7 +1017,10 @@ trait MultiProcessTrait
      * DateTime: 2023/11/3 13:27
      * @return void
      */
-    protected function executeTask(): void { }
+    protected function executeTask(): void
+    {
+        $this->debug("Execute Task...");
+    }
 
     /**
      * 初始化参数、注册事件
@@ -1016,17 +1034,17 @@ trait MultiProcessTrait
         $argv = $this->parseCommand($_SERVER['argv']); //解析  -x="xx" 格式的命令
         $this->setDebug($debug)
              ->setForked($this->isSubprocess(getopt(static::getProcessTypeKey() . ':')))
-             ->setSlaveCommand($this->isForked() ? '' : $this->_buildSlaveProcessCommand());
+             ->setSlaveCommand($this->isForked() ? '' : $this->buildSlaveProcessCommand());
         // 设置最大子进程数量
         // 如果有提供 --worker_num num | -worker_num=num 则优先这个配置
-        $this->setMaxProcessCount((int)min(max($maxProcessCount, (int)$args['worker_num'], (int)$argv['worker_num'], 1), 200));
+        $this->setMaxProcessCount((int)min(max($maxProcessCount, (int)($args['worker_num'] ?? ''), (int)($argv['worker_num'] ?? ''), 1), 200));
         // 设置进程最大运行时间
         // 如果有提供 --max_running_time seconds | -max_running_time=seconds | --max_exec_time seconds | -max_exec_time=seconds  则优先这个配置
-        $this->setProcessMaxRunningTime(min(max((int)$args['max_running_time'], (int)$argv['max_running_time'], (int)$args['max_exec_time'], (int)$argv['max_exec_time'], 10), 86400));
+        $this->setProcessMaxRunningTime(min(max((int)($args['max_running_time'] ?? ''), (int)($argv['max_running_time'] ?? ''), (int)($args['max_exec_time'] ?? ''), (int)($argv['max_exec_time'] ?? ''), 10), 86400));
         // 设置允许执行的时间
         // 如果有提供 --start_time time --end_time time | -start_time=time -end_time=time 则优先这个配置
-        $this->setStartExecuteDate(($args['start_time'] ?? $argv['start_time']) ?: $this->getStartExecuteDate());
-        $this->setEndExecuteDate(($args['end_time'] ?? $argv['end_time']) ?: $this->getEndExecuteDate());
+        $this->setStartExecuteDate(($args['start_time'] ?? $argv['start_time'] ?? '') ?: $this->getStartExecuteDate());
+        $this->setEndExecuteDate(($args['end_time'] ?? $argv['end_time'] ?? '') ?: $this->getEndExecuteDate());
         // 初始化添加检测子进程事件
         Hooker::add(static::$EVENT_CHECK_SLAVE_PROCESS, function() {
             $this->loop();
@@ -1071,15 +1089,28 @@ trait MultiProcessTrait
     /**
      * Author: Sweeper <wili.lixiang@gmail.com>
      * DateTime: 2023/11/12 0:20
+     * @param int $seconds           等待秒数
+     * @param int $timesForExecution 执行次数
      * @return void
      * @throws \Exception
      */
-    final public function start(): void
+    final public function start(int $seconds = 10, int $timesForExecution = 0): void
     {
-        for ($i = 0; $i < $this->getMaxProcessCount(); $i++) {
+        $num = 1;
+        $this->setAutoExecuteTask(false)->debug("===== start executeTask $num =====");
+        while ($this->getProcessCount() <= $this->getMaxProcessCount()) {
+            if ($timesForExecution && $num > $timesForExecution) {
+                $this->debug("$num Exceeded number of executions($timesForExecution)");
+                break;
+            }
+            $this->debug("executeTask {$num}");
             $this->executeTask();
+            ++$num;
         }
-        $this->setAutoExecuteTask(true)->loop();
+
+        $this->debug("===== waitAllSlaveProcessFinish($seconds) =====");
+
+        $this->waitAllSlaveProcessFinish($seconds);//等待监听子进程
     }
 
     /**

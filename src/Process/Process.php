@@ -56,7 +56,7 @@ class Process
     private $timeout;
 
     /** @var array */
-    private $options = ['suppress_errors' => true, 'bypass_shell' => true];
+    private $options = ['suppress_errors' => false, 'bypass_shell' => true];
 
     /**
      * @param string      $command    程序运行命令行
@@ -74,7 +74,7 @@ class Process
             self::STDERR => ['pipe', self::FLAG_WRITE],
         ];
         $pipes         = [];
-        $this->process = @proc_open($this->command, $descriptors, $pipes, $cwd, $env, $this->getOptions());
+        $this->process = proc_open($this->command, $descriptors, $pipes, $cwd, $env, $this->getOptions());
 
         //set no blocking for IO
         stream_set_blocking($pipes[0], 0);
