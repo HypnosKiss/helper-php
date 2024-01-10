@@ -8,8 +8,10 @@
 
 namespace Sweeper\HelperPhp\Traits;
 
+use BadMethodCallException;
 use Monolog\ErrorHandler;
 use Monolog\Formatter\JsonFormatter;
+use Monolog\Formatter\NormalizerFormatter;
 use Monolog\Handler\BrowserConsoleHandler;
 use Monolog\Handler\ChromePHPHandler;
 use Monolog\Handler\FirePHPHandler;
@@ -31,13 +33,13 @@ use ReflectionClass;
  * Author: Sweeper <wili.lixiang@gmail.com>
  * DateTime: 2023/9/20 14:31
  * @Package \Sweeper\HelperPhp\Traits\LogTrait
- * @mixin \Monolog\Logger
+ * @mixin Logger
  */
 trait LogTrait
 {
 
     /**
-     * @var \Monolog\Logger
+     * @var Logger
      */
     private $logger;
 
@@ -56,7 +58,7 @@ trait LogTrait
     /**
      * User: Sweeper
      * Time: 2023/8/16 19:09
-     * @param string $methodName
+     * @param string $name
      * @param array  $arguments
      * @return mixed
      */
@@ -75,7 +77,7 @@ trait LogTrait
             return parent::__call($name, $arguments);
         }
 
-        throw new \BadMethodCallException('Method no exists:' . $name);
+        throw new BadMethodCallException('Method no exists:' . $name);
     }
 
     /**
@@ -148,7 +150,7 @@ trait LogTrait
     }
 
     /**
-     * @return \Monolog\Logger
+     * @return Logger
      */
     public function getLogger(): Logger
     {
@@ -162,7 +164,7 @@ trait LogTrait
     /**
      * User: Sweeper
      * Time: 2023/8/16 18:47
-     * @param \Monolog\Logger $logger
+     * @param Logger $logger
      * @return $this
      */
     public function setLogger(Logger $logger): self
@@ -204,7 +206,7 @@ trait LogTrait
      * @param string|null $filename
      * @param string|null $logPath
      * @param bool        $registerErrorHandler
-     * @return \Monolog\Logger
+     * @return Logger
      * @example $logger->info('Welcome to Sweeper Test.', ['username' => 'sweeper']);
      */
     public function getDefaultLogger(string $name = null, string $filename = null, string $logPath = null, bool $registerErrorHandler = null): Logger
@@ -220,7 +222,7 @@ trait LogTrait
      * @param string|null $filename
      * @param string|null $logPath
      * @param bool        $registerErrorHandler
-     * @return \Monolog\Logger
+     * @return Logger
      */
     public static function getSpecificLogger(string $name = null, string $filename = null, string $logPath = null, bool $registerErrorHandler = false): Logger
     {
@@ -328,16 +330,23 @@ trait LogTrait
 
         // 实例化一个日志实例, 参数是 channel name
         $logger               = new Logger($name);
-        $streamHandlerConsole = new StreamHandler('php://stdout', Logger::DEBUG);                              // 控制台输出
-        $infoFileHandler      = new RotatingFileHandler("{$logPath}/{$filename}.info.log", 7, Logger::INFO);   // INFO 等级文件处理器
-        $errorFileHandler     = new RotatingFileHandler("{$logPath}/{$filename}.error.log", 7, Logger::ERROR); // ERROR 等级文件处理器
+        $streamHandlerConsole = new StreamHandler('php://stdout', Logger::DEBUG);                         // 控制台输出
+        $infoFileHandler      = new RotatingFileHandler("$logPath/$filename.info.log", 7, Logger::INFO);  // INFO 等级文件处理器
+        $errorFileHandler     = new RotatingFileHandler("$logPath/$filename.error.log", 7, Logger::ERROR);// ERROR 等级文件处理器
+        $jsonFormatter        = (new JsonFormatter())->setDateFormat(NormalizerFormatter::SIMPLE_DATE);   // JSON 日志格式化
 
-        $logger->pushHandler($streamHandlerConsole)
-               ->pushHandler($infoFileHandler->setFormatter(new JsonFormatter()))// 入栈, 往 handler stack 里压入 StreamHandler 的实例
-               ->pushHandler($errorFileHandler->setFormatter(new JsonFormatter()))
+        if (PHP_SAPI === 'cli') {
+            $logger->pushHandler($streamHandlerConsole);
+        }
+        $fieldRegisterBrowserConsoleHandler = 'registerBrowserConsoleHandler';
+        if (!empty($GLOBALS[$fieldRegisterBrowserConsoleHandler]) || !empty($_SERVER[$fieldRegisterBrowserConsoleHandler]) || !empty($_REQUEST[$fieldRegisterBrowserConsoleHandler]) || !empty($_ENV[$fieldRegisterBrowserConsoleHandler])) {
+            $logger->pushHandler(new BrowserConsoleHandler());
+        }
+
+        $logger->pushHandler($infoFileHandler->setFormatter($jsonFormatter))// 入栈, 往 handler stack 里压入 StreamHandler 的实例
+               ->pushHandler($errorFileHandler->setFormatter($jsonFormatter))
                ->pushHandler(new FirePHPHandler())
-               ->pushHandler(new ChromePHPHandler())
-               ->pushHandler(new BrowserConsoleHandler());
+               ->pushHandler(new ChromePHPHandler());
 
         /**
          * processor 日志加工程序，用来给日志添加额外信息.

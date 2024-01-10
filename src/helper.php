@@ -1038,33 +1038,33 @@ if (!function_exists('get_file_permission')) {
     {
         clearstatcache(true, $filename);
         $perms = fileperms($filename);
-        if (($perms&0xC000) === 0xC000) {
+        if (($perms & 0xC000) === 0xC000) {
             $info = 's';
-        } elseif (($perms&0xA000) === 0xA000) {
+        } elseif (($perms & 0xA000) === 0xA000) {
             $info = 'l';
-        } elseif (($perms&0x8000) === 0x8000) {
+        } elseif (($perms & 0x8000) === 0x8000) {
             $info = '-';
-        } elseif (($perms&0x6000) === 0x6000) {
+        } elseif (($perms & 0x6000) === 0x6000) {
             $info = 'b';
-        } elseif (($perms&0x4000) === 0x4000) {
+        } elseif (($perms & 0x4000) === 0x4000) {
             $info = 'd';
-        } elseif (($perms&0x2000) === 0x2000) {
+        } elseif (($perms & 0x2000) === 0x2000) {
             $info = 'c';
-        } elseif (($perms&0x1000) === 0x1000) {
+        } elseif (($perms & 0x1000) === 0x1000) {
             $info = 'p';
         } else {
             $info = 'u';
         }
 
-        $info .= (($perms&0x0100) ? 'r' : '-');
-        $info .= (($perms&0x0080) ? 'w' : '-');
-        $info .= (($perms&0x0040) ? (($perms&0x0800) ? 's' : 'x') : (($perms&0x0800) ? 'S' : '-'));
-        $info .= (($perms&0x0020) ? 'r' : '-');
-        $info .= (($perms&0x0010) ? 'w' : '-');
-        $info .= (($perms&0x0008) ? (($perms&0x0400) ? 's' : 'x') : (($perms&0x0400) ? 'S' : '-'));
-        $info .= (($perms&0x0004) ? 'r' : '-');
-        $info .= (($perms&0x0002) ? 'w' : '-');
-        $info .= (($perms&0x0001) ? (($perms&0x0200) ? 't' : 'x') : (($perms&0x0200) ? 'T' : '-'));
+        $info .= (($perms & 0x0100) ? 'r' : '-');
+        $info .= (($perms & 0x0080) ? 'w' : '-');
+        $info .= (($perms & 0x0040) ? (($perms & 0x0800) ? 's' : 'x') : (($perms & 0x0800) ? 'S' : '-'));
+        $info .= (($perms & 0x0020) ? 'r' : '-');
+        $info .= (($perms & 0x0010) ? 'w' : '-');
+        $info .= (($perms & 0x0008) ? (($perms & 0x0400) ? 's' : 'x') : (($perms & 0x0400) ? 'S' : '-'));
+        $info .= (($perms & 0x0004) ? 'r' : '-');
+        $info .= (($perms & 0x0002) ? 'w' : '-');
+        $info .= (($perms & 0x0001) ? (($perms & 0x0200) ? 't' : 'x') : (($perms & 0x0200) ? 'T' : '-'));
 
         return $info;
     }
@@ -1548,7 +1548,7 @@ if (!function_exists('download_zip_file')) {
         }
         // 打开/创建目标压缩文件
         $targetZipArchive = new \ZipArchive();
-        $targetResult     = $targetZipArchive->open($targetArchive, \ZipArchive::CREATE|\ZipArchive::OVERWRITE);
+        $targetResult     = $targetZipArchive->open($targetArchive, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
         if ($targetResult !== true) {// 检查文件是否成功打开
             throw new \InvalidArgumentException('创建压缩文件失败，请稍后重试');
         }
@@ -1603,5 +1603,52 @@ if (!function_exists('download_zip_file')) {
                 exit('文件下载成功');
             }
         }
+    }
+}
+
+if (!function_exists('format_vue_struct')) {
+    /**
+     * 格式化 VUE 结构数据
+     * User: Sweeper
+     * Time: 2023/8/1 14:04
+     * @param array  $input
+     * @param string $labelKey
+     * @param string $valueKey
+     * @return array
+     */
+    function format_vue_struct(array $input, string $labelKey = '', string $valueKey = 'id'): array
+    {
+        return array_map(static function($val) use ($labelKey, $valueKey) {
+            return [
+                'value' => $val[$valueKey],
+                'label' => $val[$labelKey],
+            ];
+        }, $input);
+    }
+}
+
+if (!function_exists('format_files')) {
+    /**
+     * 格式化 $_FILES 数据
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2024/1/4 11:36
+     * @param array $_files
+     * @return array
+     */
+    function format_files(array &$_files = []): array
+    {
+        $_files    = $_files ?: current($_FILES);
+        $isMulti   = is_array($_files['name']);
+        $fileCount = $isMulti ? count($_files['name']) : 1;
+        $fileKeys  = array_keys($_files);
+
+        $file_ary = [];
+        for ($i = 0; $i < $fileCount; $i++) {
+            foreach ($fileKeys as $key) {
+                $file_ary[$i][$key] = $isMulti ? $_files[$key][$i] : $_files[$key];
+            }
+        }
+
+        return $_files = $file_ary;
     }
 }

@@ -3,9 +3,10 @@
     "description": "helper tool、function",
     "type": "library",
     "keywords": [
-        "helper",
-        "tool",
-        "php"
+        "PHP",
+        "Helpers",
+        "Tools",
+        "Components"
     ],
     "homepage": "https://github.com/HypnosKiss/helper-php/",
     "license": "Apache-2.0",
