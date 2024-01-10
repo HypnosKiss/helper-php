@@ -485,7 +485,7 @@ if (!function_exists('array_unset_by_key')) {
 if (!function_exists('array_push_by_path_custom')) {
     /**
      * 根据xpath，将数据压入数组 替换原eval方式
-     * 原eval 方法 Lite\func\array_push_by_path;
+     * 原eval 方法 array_push_by_path;
      * @param array        $data
      * @param string|array $path 路径 示例a.b a.0 a[0] a["c"]
      * @param              $value

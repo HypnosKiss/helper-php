@@ -2,8 +2,6 @@
 
 namespace Sweeper\HelperPhp\Tool;
 
-use Lite\Component\Net\Client;
-
 use function Sweeper\HelperPhp\Func\time_range_v;
 use function Sweeper\HelperPhp\is_windows;
 
@@ -17,37 +15,37 @@ abstract class Console
 {
 
     //前景色
-    public const FORE_COLOR_BLACK        = '0;30';
+    public const FORE_COLOR_BLACK = '0;30';
 
-    public const FORE_COLOR_DARK_GRAY    = '1;30';
+    public const FORE_COLOR_DARK_GRAY = '1;30';
 
-    public const FORE_COLOR_BLUE         = '0;34';
+    public const FORE_COLOR_BLUE = '0;34';
 
-    public const FORE_COLOR_LIGHT_BLUE   = '1;34';
+    public const FORE_COLOR_LIGHT_BLUE = '1;34';
 
-    public const FORE_COLOR_GREEN        = '0;32';
+    public const FORE_COLOR_GREEN = '0;32';
 
-    public const FORE_COLOR_LIGHT_GREEN  = '1;32';
+    public const FORE_COLOR_LIGHT_GREEN = '1;32';
 
-    public const FORE_COLOR_CYAN         = '0;36';
+    public const FORE_COLOR_CYAN = '0;36';
 
-    public const FORE_COLOR_LIGHT_CYAN   = '1;36';
+    public const FORE_COLOR_LIGHT_CYAN = '1;36';
 
-    public const FORE_COLOR_RED          = '0;31';
+    public const FORE_COLOR_RED = '0;31';
 
-    public const FORE_COLOR_LIGHT_RED    = '1;31';
+    public const FORE_COLOR_LIGHT_RED = '1;31';
 
-    public const FORE_COLOR_PURPLE       = '0;35';
+    public const FORE_COLOR_PURPLE = '0;35';
 
     public const FORE_COLOR_LIGHT_PURPLE = '1;35';
 
-    public const FORE_COLOR_BROWN        = '0;33';
+    public const FORE_COLOR_BROWN = '0;33';
 
-    public const FORE_COLOR_YELLOW       = '1;33';
+    public const FORE_COLOR_YELLOW = '1;33';
 
-    public const FORE_COLOR_LIGHT_GRAY   = '0;37';
+    public const FORE_COLOR_LIGHT_GRAY = '0;37';
 
-    public const FORE_COLOR_WHITE        = '1;37';
+    public const FORE_COLOR_WHITE = '1;37';
 
     //前景色清单
     public const FORE_COLOR_MAP = [
@@ -70,19 +68,19 @@ abstract class Console
     ];
 
     //背景色
-    public const BACK_COLOR_BLACK      = '40';
+    public const BACK_COLOR_BLACK = '40';
 
-    public const BACK_COLOR_RED        = '41';
+    public const BACK_COLOR_RED = '41';
 
-    public const BACK_COLOR_GREEN      = '42';
+    public const BACK_COLOR_GREEN = '42';
 
-    public const BACK_COLOR_YELLOW     = '43';
+    public const BACK_COLOR_YELLOW = '43';
 
-    public const BACK_COLOR_BLUE       = '44';
+    public const BACK_COLOR_BLUE = '44';
 
-    public const BACK_COLOR_MAGENTA    = '45';
+    public const BACK_COLOR_MAGENTA = '45';
 
-    public const BACK_COLOR_CYAN       = '46';
+    public const BACK_COLOR_CYAN = '46';
 
     public const BACK_COLOR_LIGHT_GRAY = '47';
 
@@ -98,9 +96,9 @@ abstract class Console
         self::BACK_COLOR_LIGHT_GRAY,
     ];
 
-    public const REQUIRED       = 'required';
+    public const REQUIRED = 'required';
 
-    public const OPTIONAL       = 'optional';
+    public const OPTIONAL = 'optional';
 
     /**
      * get cli console color output string

@@ -4,7 +4,6 @@ namespace Sweeper\HelperPhp\Workerman;
 
 use BadFunctionCallException;
 use InvalidArgumentException;
-use Lite\DB\Driver\DBAbstract;
 use RuntimeException;
 use Workerman\Connection\TcpConnection;
 use Workerman\Protocols\Http\Request;
