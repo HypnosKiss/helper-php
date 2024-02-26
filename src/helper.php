@@ -2,9 +2,7 @@
 
 namespace Sweeper\HelperPhp;
 
-use app\common\model\CollectLinkQueueModel;
-use think\Request;
-use ZipArchive;
+use Throwable;
 
 use function Sweeper\HelperPhp\Func\array_clear_empty;
 use function Sweeper\HelperPhp\Func\format_size;
@@ -506,6 +504,24 @@ if (!function_exists('array_push_by_path_custom')) {
         } else {
             $first = array_shift($path);
             array_push_by_path_custom($data[$first], $path, $value);
+        }
+    }
+}
+
+if (!function_exists('assign_array_by_path')) {
+    /**
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2024/1/13 10:57
+     * @param string $path
+     * @param array  $arr
+     * @param string $delimiter
+     * @return void
+     */
+    function assign_array_by_path(string $path, array &$arr = [], string $delimiter = '.')
+    {
+        $keys = explode($delimiter, $path);
+        while ($key = array_shift($keys)) {
+            $arr = &$arr[$key];
         }
     }
 }
@@ -1606,7 +1622,7 @@ if (!function_exists('download_zip_file')) {
     }
 }
 
-if (!function_exists('format_vue_struct')) {
+if (!function_exists('format_vue_struct_by_key')) {
     /**
      * 格式化 VUE 结构数据
      * User: Sweeper
@@ -1616,7 +1632,7 @@ if (!function_exists('format_vue_struct')) {
      * @param string $valueKey
      * @return array
      */
-    function format_vue_struct(array $input, string $labelKey = '', string $valueKey = 'id'): array
+    function format_vue_struct_by_key(array $input, string $labelKey = '', string $valueKey = 'id'): array
     {
         return array_map(static function($val) use ($labelKey, $valueKey) {
             return [
@@ -1650,5 +1666,145 @@ if (!function_exists('format_files')) {
         }
 
         return $_files = $file_ary;
+    }
+}
+
+if (!function_exists('replace_array_key')) {
+    /**
+     * 替换数组键
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2024/1/26 9:36
+     * @param array $array
+     * @param array $keys
+     * @return array
+     */
+    function replace_array_key(array $array, array $keys = []): array
+    {
+        return array_map(static function($row) use ($keys) {// 根据标题分组
+            foreach ($row as $k => $v) {
+                if (isset($keys[$k])) {
+                    $row[$keys[$k]] = $v;
+                    unset($row[$k]);
+                }
+            }
+
+            return $row;
+        }, $array);
+    }
+}
+
+if (!function_exists('format_map_to_vue_struct')) {
+    /**
+     * 格式化 MAP 结构为 VUE 结构数据
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2024/1/26 9:48
+     * @param array $input
+     * @return array
+     */
+    function format_map_to_vue_struct(array $input): array
+    {
+        array_walk($input, static function(&$val, $key) {
+            $val = [
+                'value' => $key,
+                'label' => $val,
+            ];
+        });
+
+        return $input;
+    }
+}
+
+if (!function_exists('get_changed_data')) {
+
+    function get_changed_data($data, $origin, $exclusionFields = []): array
+    {
+        $data = array_udiff_assoc($data, $origin, static function($a, $b) {
+            if ((empty($a) || empty($b)) && $a !== $b) {
+                return 1;
+            }
+
+            return is_object($a) || $a !== $b ? 1 : 0;
+        });
+
+        // 排除字段
+        foreach ($exclusionFields as $key => $field) {
+            if (array_key_exists($field, $data)) {
+                unset($data[$field]);
+            }
+        }
+
+        return $data;
+    }
+}
+
+if (!function_exists('json_output')) {
+    /**
+     * JSON 响应
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2024/2/26 15:18
+     * @param array  $data
+     * @param int    $code
+     * @param string $msg
+     * @param int    $httpCode
+     * @param array  $headers
+     * @param int    $options
+     * @return false|string
+     */
+    function json_output(array $data = [], int $code = 1, string $msg = 'Success', int $httpCode = 200, array $headers = ['Content-Type' => 'application/json ; charset=utf-8'], $options = 0)
+    {
+        // 处理输出数据
+        $_data = json_encode(['code' => $code, 'msg' => $msg, 'data' => $data], $options ?? JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        if (!empty($headers) && !headers_sent()) {
+            // 发送状态码
+            http_response_code($httpCode);
+            // 发送头部信息
+            foreach ($headers as $name => $val) {
+                header($name . (!is_null($val) ? ':' . $val : ''));
+            }
+        }
+
+        echo $_data;
+
+        if (function_exists('fastcgi_finish_request')) {
+            // 提高页面响应
+            fastcgi_finish_request();
+        }
+
+        return $_data;
+    }
+}
+
+if (!function_exists('success')) {
+    /**
+     * 返回成功的JSON数据结构
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2024/2/26 15:31
+     * @param array  $data
+     * @param int    $code
+     * @param string $msg
+     * @param int    $httpCode
+     * @return false|string
+     */
+    function success(array $data = [], int $code = 0, string $msg = 'Success', int $httpCode = 200)
+    {
+        return json_output($data, $code, $msg, $httpCode);
+    }
+}
+
+if (!function_exists('failure')) {
+    /**
+     * 返回失败的JSON数据结构
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2024/2/26 15:32
+     * @param array  $data
+     * @param int    $code
+     * @param string $msg
+     * @param int    $httpCode
+     * @return false|string
+     */
+    function failure(array $data = [], int $code = 1, string $msg = 'Failure', int $httpCode = 400)
+    {
+        return json_output($data, $code, $msg, $httpCode);
     }
 }

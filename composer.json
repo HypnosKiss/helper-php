@@ -42,6 +42,11 @@
         "sweeper/guzzlehttp-request": "^1.0 || ^2.0",
         "symfony/process": "^5.4.28"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^8",
+        "symfony/var-dumper": "^5.4.29",
+        "symfony/console": "^5.4.31"
+    },
     "autoload": {
         "psr-4": {
             "Sweeper\\HelperPhp\\": "src/"
@@ -68,9 +73,5 @@
         "sort-packages": true
     },
     "minimum-stability": "dev",
-    "require-dev": {
-        "phpunit/phpunit": "^8",
-        "symfony/var-dumper": "^5.4.29",
-        "symfony/console": "^5.4.31"
-    }
+    "prefer-stable": true
 }
