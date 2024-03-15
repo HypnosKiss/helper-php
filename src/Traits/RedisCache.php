@@ -103,7 +103,7 @@ trait RedisCache
         $errors    = [];
         $cacheKey  = $this->getRedisHandler()->generateKey($cacheKey);
         try {
-            if ($data = RedisClient::instance()->get($cacheKey)) {
+            if ($data = $this->getRedisHandler()->get($cacheKey)) {
                 $cacheData = json_decode($data, true) ?: [];
             }
         } catch (\Throwable $ex) {

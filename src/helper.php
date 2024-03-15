@@ -1808,3 +1808,47 @@ if (!function_exists('failure')) {
         return json_output($data, $code, $msg, $httpCode);
     }
 }
+
+if (!function_exists('root_path')) {
+    /**
+     * 根目录路径
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2024/2/27 13:32
+     * @return string
+     */
+    function root_path(): string
+    {
+        return $_SERVER['DOCUMENT_ROOT'] ?: dirname(__DIR__, 4);
+    }
+}
+
+if (!function_exists('vendor_path')) {
+    /**
+     * vendor 目录路径
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2024/2/27 13:32
+     * @return string
+     */
+    function vendor_path(): string
+    {
+        $vendorPath = root_path() . '/vendor';
+
+        return is_dir($vendorPath) ? $vendorPath : dirname(__DIR__) . '/vendor';
+    }
+}
+
+if (!function_exists('package_path')) {
+    /**
+     * package 目录路径
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2024/2/27 13:32
+     * @param string $packageName
+     * @return string
+     */
+    function package_path(string $packageName): string
+    {
+        $packagePath = vendor_path() . "/" . trim($packageName, '/\\');
+
+        return is_dir($packagePath) ? $packagePath : dirname(__DIR__);
+    }
+}
