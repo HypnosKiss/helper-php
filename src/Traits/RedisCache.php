@@ -90,34 +90,29 @@ trait RedisCache
      * Author: Sweeper <wili.lixiang@gmail.com>
      * DateTime: 2024/3/15 10:37
      * @param string        $cacheKey        缓存 KEY
-     * @param string        $cacheValue      缓存 VALUE
      * @param callable|null $getDataCallback 获取数据的回调函数
      * @param int           $expire          过期时间
      * @param bool          $refresh         强制刷新数据
      * @param mixed         ...$args         回调函数的参数
      * @return array
      */
-    public function getCacheData(string $cacheKey, string $cacheValue = '', callable $getDataCallback = null, int $expire = 86400, bool $refresh = false, ...$args): array
+    public function getCacheData(string $cacheKey, callable $getDataCallback = null, int $expire = 86400, bool $refresh = false, ...$args): array
     {
         $cacheData = [];
         $errors    = [];
         $cacheKey  = $this->getRedisHandler()->generateKey($cacheKey);
         try {
             if ($data = $this->getRedisHandler()->get($cacheKey)) {
-                $cacheData = json_decode($data, true) ?: [];
+                $cacheData = json_decode($data, true) ?: $data;
             }
         } catch (\Throwable $ex) {
             $errors[] = "get exception:{$ex->getFile()}#{$ex->getLine()} ({$ex->getMessage()})";
         }
         if ($refresh || empty($cacheData)) {
-            if (is_callable($getDataCallback)) {
-                $cacheData = call_user_func_array($getDataCallback, $args) ?: [];
-            } else {
-                $cacheData = $cacheValue;
-            }
+            $cacheData = call_user_func_array($getDataCallback, $args) ?: [];
             try {
                 if (!empty($cacheData)) {
-                    $this->getRedisHandler()->set($cacheKey, json_encode($cacheData, JSON_UNESCAPED_UNICODE), 'EX', $expire);
+                    $this->getRedisHandler()->set($cacheKey, json_encode($cacheData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), 'EX', $expire);
                 }
             } catch (\Throwable $ex) {
                 $errors[] = "set exception:{$ex->getFile()}#{$ex->getLine()} ({$ex->getMessage()})";
