@@ -1858,13 +1858,15 @@ if (!function_exists('array_to_string')) {
      * DateTime: 2024/3/18 10:36
      * @param array  $arr
      * @param string $glue
+     * @param bool   $wrap
      * @return string
      */
-    function array_to_string(array $arr, string $glue = ', '): string
+    function array_to_string(array $arr, string $glue = ', ', bool $wrap = true): string
     {
-        return implode($glue, array_map(static function ($key, $val) {
-            return "$key => $val";
-        }, array_flip($arr), $arr));
+        $before = $wrap ? '[' : '';
+        $after  = $wrap ? ']' : '';
+
+        return $before . implode($glue, array_map(static function($key, $val) { return "$key => $val"; }, array_flip($arr), $arr)) . $after;
     }
 }
 
@@ -1892,7 +1894,6 @@ if (!function_exists('cartesian_product')) {
         return $result;
     }
 }
-
 
 if (!function_exists('extract_array_by_xpath')) {
     /**
