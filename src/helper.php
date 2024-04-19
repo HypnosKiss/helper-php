@@ -2,8 +2,6 @@
 
 namespace Sweeper\HelperPhp;
 
-use Throwable;
-
 use function Sweeper\HelperPhp\Func\array_clear_empty;
 use function Sweeper\HelperPhp\Func\format_size;
 use function Sweeper\HelperPhp\Func\resolve_size;
@@ -1852,3 +1850,97 @@ if (!function_exists('package_path')) {
         return is_dir($packagePath) ? $packagePath : dirname(__DIR__);
     }
 }
+
+if (!function_exists('array_to_string')) {
+    /**
+     * 数组转字符串
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2024/3/18 10:36
+     * @param array  $arr
+     * @param string $glue
+     * @return string
+     */
+    function array_to_string(array $arr, string $glue = ', '): string
+    {
+        return implode($glue, array_map(static function ($key, $val) {
+            return "$key => $val";
+        }, array_flip($arr), $arr));
+    }
+}
+
+if (!function_exists('cartesian_product')) {
+    /**
+     * 笛卡尔积
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2024/4/3 9:59
+     * @param array $arrays
+     * @return array|array[]
+     */
+    function cartesian_product(array $arrays): array
+    {
+        $result = [[]];
+        foreach ($arrays as $property => $property_values) {
+            $tmp = [];
+            foreach ($result as $result_item) {
+                foreach ($property_values as $property_value) {
+                    $tmp[] = array_merge($result_item, [$property => $property_value]);
+                }
+            }
+            $result = $tmp;
+        }
+
+        return $result;
+    }
+}
+
+
+if (!function_exists('extract_array_by_xpath')) {
+    /**
+     * 从数组中提取指定XPath路径的数据
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * DateTime: 2024/4/3 10:00
+     * @param array  $inputArray
+     * @param string $xpath
+     * @param string $delimiter
+     * @return array
+     * @example
+     * //// 示例使用：
+     * // $inputArray = [
+     * //     'root' => [
+     * //         'child1' => [
+     * //             'grandchild1' => 'value1',
+     * //             'grandchild2' => 'value2',
+     * //         ],
+     * //         'child2' => [
+     * //             'grandchild3' => 'value3',
+     * //         ],
+     * //     ],
+     * // ];
+     * // $xpath = 'root/child2';
+     * // $result = extract_array_by_xpath($inputArray, $xpath);
+     * // print_r($result);
+     */
+    function extract_array_by_xpath(array $inputArray, string $xpath, string $delimiter = '/'): array
+    {
+        // 初始化结果数组
+        $result = [];
+
+        // 分解XPath路径为路径片段数组
+        $pathSegments = explode($delimiter, trim($xpath, $delimiter));
+        foreach ($inputArray as $key => $value) {
+            // 处理当前层级的数据
+            if (is_array($value) && count($pathSegments) > 1) {
+                $extractedValues = extract_array_by_xpath($value, implode($delimiter, array_slice($pathSegments, 1)));
+                if (!empty($extractedValues)) {
+                    $result[$key] = $extractedValues;
+                }
+            } elseif (count($pathSegments) === 1 && $key === $pathSegments[0]) {
+                // 如果路径只有一个片段且与当前键匹配，则添加到结果数组
+                $result[$key] = $value;
+            }
+        }
+
+        return $result;
+    }
+}
+
