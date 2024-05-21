@@ -48,7 +48,7 @@ abstract class CommonAbstract extends AbstractLogger
      */
     public static function combineMessages($messages): string
     {
-        return count($messages) === 1 && is_string(current($messages)) ? current($messages) : json_encode((array)$messages, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+        return count($messages) === 1 && is_string(current($messages)) ? current($messages) : json_encode((array)$messages, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
     }
 
     /**

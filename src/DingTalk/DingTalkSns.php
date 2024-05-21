@@ -47,9 +47,9 @@ class DingTalkSns extends Request
 
     public const STATE_LOGIN = 'login';
 
-    public const STATE_BIND  = 'bind';
+    public const STATE_BIND = 'bind';
 
-    public const STATE_FREE  = 'free';
+    public const STATE_FREE = 'free';
 
     /**
      * 创建扫码登录url
@@ -592,7 +592,7 @@ class DingTalkSns extends Request
     {
         $sign_info       = $this->getRobotSign($secret);
         $url             = $robot_url . "&timestamp=" . $sign_info['timestamp'] . "&sign=" . $sign_info['sign'];
-        $data            = is_array($message) ? json_encode($message) : $message;
+        $data            = is_array($message) ? json_encode($message, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) : $message;
         $responseMessage = $this->robotPost($url, $data);
         $responseMessage = json_decode($responseMessage);
         if ($responseMessage->errcode == 0 && $responseMessage->errmsg == 'ok') {

@@ -19,7 +19,7 @@ class DingTalk
 
     use MultiPattern;
 
-    protected $url    = 'https://oapi.dingtalk.com/robot/send?access_token=xxx';
+    protected $url = 'https://oapi.dingtalk.com/robot/send?access_token=xxx';
 
     protected $secret = 'xxx';
 
@@ -110,7 +110,7 @@ class DingTalk
             ],
         ];
 
-        return static::curlPost($this->getUrl(), json_encode($data), $header);
+        return static::curlPost($this->getUrl(), json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), $header);
     }
 
     /**
@@ -132,7 +132,7 @@ class DingTalk
             ],
         ];
 
-        return static::curlPost($url, json_encode($data), $header);
+        return static::curlPost($url, json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), $header);
     }
 
     /**
@@ -144,7 +144,7 @@ class DingTalk
     {
         $sign_info = $this->getSign();
         $url       = $this->getUrl() . "&timestamp=" . $sign_info['timestamp'] . "&sign=" . $sign_info['sign'];
-        $data      = json_encode(['msgtype' => 'text', 'text' => ['content' => $message]]);
+        $data      = json_encode(['msgtype' => 'text', 'text' => ['content' => $message]], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
 
         return static::curlPost($url, $data);
     }

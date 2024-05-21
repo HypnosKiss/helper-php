@@ -175,7 +175,7 @@ class MultiProcessManager
             $this->logger->debug('createTask');
             $process                       = &$this->getAvailableProcess();
             $process[static::CALLBACK_KEY] = $callback;
-            $data                          = json_encode($params);
+            $data                          = json_encode($params, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
             $length                        = strlen($data);
             $length                        = str_pad($length . '', 8, ' ', STR_PAD_RIGHT);
             $size                          = fwrite($process[static::PIPES_KEY][0], $length . $data);
@@ -276,7 +276,7 @@ class MultiProcessManager
             if (!empty($data) && !empty($this->_slaveHandler)) {
                 $data = json_decode($data, true);
                 $resp = call_user_func($this->_slaveHandler, $data, $this);
-                echo json_encode($resp);
+                echo json_encode($resp, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
             } else {
                 usleep(100000);
             }

@@ -1052,33 +1052,33 @@ if (!function_exists('get_file_permission')) {
     {
         clearstatcache(true, $filename);
         $perms = fileperms($filename);
-        if (($perms & 0xC000) === 0xC000) {
+        if (($perms&0xC000) === 0xC000) {
             $info = 's';
-        } elseif (($perms & 0xA000) === 0xA000) {
+        } elseif (($perms&0xA000) === 0xA000) {
             $info = 'l';
-        } elseif (($perms & 0x8000) === 0x8000) {
+        } elseif (($perms&0x8000) === 0x8000) {
             $info = '-';
-        } elseif (($perms & 0x6000) === 0x6000) {
+        } elseif (($perms&0x6000) === 0x6000) {
             $info = 'b';
-        } elseif (($perms & 0x4000) === 0x4000) {
+        } elseif (($perms&0x4000) === 0x4000) {
             $info = 'd';
-        } elseif (($perms & 0x2000) === 0x2000) {
+        } elseif (($perms&0x2000) === 0x2000) {
             $info = 'c';
-        } elseif (($perms & 0x1000) === 0x1000) {
+        } elseif (($perms&0x1000) === 0x1000) {
             $info = 'p';
         } else {
             $info = 'u';
         }
 
-        $info .= (($perms & 0x0100) ? 'r' : '-');
-        $info .= (($perms & 0x0080) ? 'w' : '-');
-        $info .= (($perms & 0x0040) ? (($perms & 0x0800) ? 's' : 'x') : (($perms & 0x0800) ? 'S' : '-'));
-        $info .= (($perms & 0x0020) ? 'r' : '-');
-        $info .= (($perms & 0x0010) ? 'w' : '-');
-        $info .= (($perms & 0x0008) ? (($perms & 0x0400) ? 's' : 'x') : (($perms & 0x0400) ? 'S' : '-'));
-        $info .= (($perms & 0x0004) ? 'r' : '-');
-        $info .= (($perms & 0x0002) ? 'w' : '-');
-        $info .= (($perms & 0x0001) ? (($perms & 0x0200) ? 't' : 'x') : (($perms & 0x0200) ? 'T' : '-'));
+        $info .= (($perms&0x0100) ? 'r' : '-');
+        $info .= (($perms&0x0080) ? 'w' : '-');
+        $info .= (($perms&0x0040) ? (($perms&0x0800) ? 's' : 'x') : (($perms&0x0800) ? 'S' : '-'));
+        $info .= (($perms&0x0020) ? 'r' : '-');
+        $info .= (($perms&0x0010) ? 'w' : '-');
+        $info .= (($perms&0x0008) ? (($perms&0x0400) ? 's' : 'x') : (($perms&0x0400) ? 'S' : '-'));
+        $info .= (($perms&0x0004) ? 'r' : '-');
+        $info .= (($perms&0x0002) ? 'w' : '-');
+        $info .= (($perms&0x0001) ? (($perms&0x0200) ? 't' : 'x') : (($perms&0x0200) ? 'T' : '-'));
 
         return $info;
     }
@@ -1146,7 +1146,7 @@ if (!function_exists('send_ding_talk_message')) {
     function send_ding_talk_message(string $webhook, string $message, array $data = []): bool
     {
         $data      = $data ?: ['msgtype' => 'text', 'text' => ['content' => $message]];
-        $json_data = json_encode($data);
+        $json_data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $webhook);
@@ -1562,7 +1562,7 @@ if (!function_exists('download_zip_file')) {
         }
         // 打开/创建目标压缩文件
         $targetZipArchive = new \ZipArchive();
-        $targetResult     = $targetZipArchive->open($targetArchive, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        $targetResult     = $targetZipArchive->open($targetArchive, \ZipArchive::CREATE|\ZipArchive::OVERWRITE);
         if ($targetResult !== true) {// 检查文件是否成功打开
             throw new \InvalidArgumentException('创建压缩文件失败，请稍后重试');
         }
@@ -1751,7 +1751,7 @@ if (!function_exists('json_output')) {
     function json_output(array $data = [], int $code = 1, string $msg = 'Success', int $httpCode = 200, array $headers = ['Content-Type' => 'application/json ; charset=utf-8'], $options = 0)
     {
         // 处理输出数据
-        $_data = json_encode(['code' => $code, 'msg' => $msg, 'data' => $data], $options ?? JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $_data = json_encode(['code' => $code, 'msg' => $msg, 'data' => $data], $options ?? JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
 
         if (!empty($headers) && !headers_sent()) {
             // 发送状态码

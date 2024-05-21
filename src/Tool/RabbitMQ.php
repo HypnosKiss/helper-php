@@ -395,7 +395,7 @@ class RabbitMQ
     public function produceMessage(array $body, string $routingKey = '', string $exchangeName = '', array $properties = []): bool
     {
         try {
-            $message = new AMQPMessage(json_encode($body, JSON_UNESCAPED_UNICODE), array_replace(['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT], $properties));
+            $message = new AMQPMessage(json_encode($body, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), array_replace(['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT], $properties));
             $this->getChannel()->basic_publish($message, $exchangeName ?: $this->getSpecifyConfig('exchange_name', null), $routingKey ?: $this->getSpecifyConfig('routing_key'));
             $flag = true;
         } catch (Throwable $ex) {

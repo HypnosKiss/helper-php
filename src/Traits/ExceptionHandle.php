@@ -62,7 +62,7 @@ trait ExceptionHandle
     {
         $exceptionHandler = $exceptionHandler ?: function(Throwable $e) {
             $args['exception'] = static::formatErrorInfoToArray($e);
-            $content           = date('Y-m-d H:i:s') . " Uncaught exception: " . json_encode($args, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) . PHP_EOL;
+            $content           = date('Y-m-d H:i:s') . " Uncaught exception: " . json_encode($args, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) . PHP_EOL;
             $file_path         = sys_get_temp_dir() . '/exception';
             if (!file_exists($file_path) && !mkdir($file_path, 0777, true) && !is_dir($file_path)) {
                 throw new \RuntimeException(sprintf('Directory "%s" was not created', $file_path));
@@ -131,7 +131,7 @@ trait ExceptionHandle
             $error             = "[SHUTDOWN] lvl:" . static::showFriendlyErrorType($error_type) . " | msg:" . $error_message . " | file:" . $error_file . " | line:" . $error_line;
             $args['error']     = $error;
             $args['parameter'] = $parameter;
-            $content           = date('Y-m-d H:i:s') . " Shutdown: " . json_encode($args, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) . PHP_EOL;
+            $content           = date('Y-m-d H:i:s') . " Shutdown: " . json_encode($args, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) . PHP_EOL;
             $file_path         = sys_get_temp_dir() . '/shutdown';
             if (!file_exists($file_path) && !mkdir($file_path, 0777, true) && !is_dir($file_path)) {
                 throw new \RuntimeException(sprintf('Directory "%s" was not created', $file_path));

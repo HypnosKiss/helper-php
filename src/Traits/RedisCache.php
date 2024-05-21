@@ -76,7 +76,7 @@ trait RedisCache
             $cacheData['data']   = $getDataCallback(...$args) ?: [];
             $cacheData['expire'] = time() + (empty($cacheData['data']) ? $emptyDataExpire : $expire);
             try {
-                $this->getRedisHandler()->hSet($cacheKey, $cacheField, json_encode($cacheData, JSON_UNESCAPED_UNICODE));
+                $this->getRedisHandler()->hSet($cacheKey, $cacheField, json_encode($cacheData, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE));
             } catch (\Throwable $ex) {
                 $errors[] = "hSet exception:{$ex->getFile()}#{$ex->getLine()} ({$ex->getMessage()})";
             }
@@ -112,7 +112,7 @@ trait RedisCache
             $cacheData = call_user_func_array($getDataCallback, $args) ?: [];
             try {
                 if (!empty($cacheData)) {
-                    $this->getRedisHandler()->set($cacheKey, json_encode($cacheData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), 'EX', $expire);
+                    $this->getRedisHandler()->set($cacheKey, json_encode($cacheData, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), 'EX', $expire);
                 }
             } catch (\Throwable $ex) {
                 $errors[] = "set exception:{$ex->getFile()}#{$ex->getLine()} ({$ex->getMessage()})";

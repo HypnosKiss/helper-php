@@ -60,7 +60,7 @@ function curl_post($url, $data = null, array $curl_option = []): array
  */
 function curl_post_json($url, $data = null, array $curl_option = []): array
 {
-    $data        = ($data && !is_string($data)) ? json_encode($data) : $data;
+    $data        = ($data && !is_string($data)) ? json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) : $data;
     $curl_option = curl_merge_options([
         CURLOPT_HTTPHEADER => [
             'Content-Type: application/json; charset=utf-8',

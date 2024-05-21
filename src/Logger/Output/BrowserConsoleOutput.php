@@ -37,18 +37,18 @@ class BrowserConsoleOutput extends CommonAbstract
             $cus_id_css     = 'color:#053c19; background-color:#00800036; border-radius:5px; padding:2px 0.5em; text-shadow:1px 1px 1px white; display:inline-block;';
             foreach ($this->logs as [$level, $messages, $logger_id, $trace_info]) {
                 $op     = static::LEVEL_MAP[$level];
-                $id_css = $logger_id == Logger::DEFAULT_LOG_ID ? $default_id_css : $cus_id_css;
+                $id_css = $logger_id === Logger::DEFAULT_LOG_ID ? $default_id_css : $cus_id_css;
                 $json   = ["'%c$logger_id'", "'$id_css'"];
                 foreach ($messages as $msg) {
-                    $json[] = json_encode($msg, JSON_UNESCAPED_UNICODE);
+                    $json[] = json_encode($msg, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
                 }
                 if ($trace_info) {
                     $callee = $trace_info['class'] . $trace_info['type'] . $trace_info['function'] . '()';
                     $loc    = $trace_info['file'] . "({$trace_info['line']})";
-                    $json[] = json_encode("$callee");
-                    $json[] = json_encode("{$loc}");
+                    $json[] = json_encode($callee, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+                    $json[] = json_encode($loc, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
                 }
-                echo "console.{$op}(" . join(',', $json) . ");", PHP_EOL;
+                echo "console.$op(" . join(',', $json) . ");", PHP_EOL;
             }
             echo '</script>';
         });

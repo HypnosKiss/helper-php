@@ -292,7 +292,7 @@ class Text
                 'TargetLanguage' => $targetLanguage,
                 'SourceLanguage' => $sourceLanguage,
                 'FormatType'     => $formatType,
-                'SourceText'     => json_encode($sourceText),
+                'SourceText'     => json_encode($sourceText, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE),
             ];
             $result = AlibabaCloud::rpc()
                                   ->product('alimt')

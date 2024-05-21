@@ -378,7 +378,7 @@ function get_folder_size($path): int
 function log(string $file, $content, $max_size = 10 * 1024 * 1024, int $max_files = 5, string $pad_str = null)
 {
     if (!is_string($content)) {
-        $content = json_encode($content, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE);
+        $content = json_encode($content, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
     }
     $content = date('Y-m-d H:i:s') . "  " . $content . "\n";
     $pad_str = $pad_str ?? ('-' . date('YmdHis'));
