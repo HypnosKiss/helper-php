@@ -34,6 +34,7 @@
 
 namespace Sweeper\HelperPhp\Test;
 
+use Sweeper\HelperPhp\Tool\Logger;
 use Sweeper\HelperPhp\Traits\LogTrait;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
@@ -50,7 +51,8 @@ class LogTest
     public function testLog()
     {
         $this->setLogPath(__DIR__ . '/log')->setFilename('test');
-        $this->info('test log message', array_replace(['todo' => 'some message'], func_get_args()));
+        $this->info('test log trait', array_replace(['todo' => 'some message'], func_get_args()));
+        Logger::instance([], static::class)->setLoggerName(static::class)->setFilename('Logger')->info('test logger');
     }
 
 }
