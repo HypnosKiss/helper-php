@@ -11,6 +11,7 @@ namespace Sweeper\HelperPhp\Traits;
 use BadMethodCallException;
 use Monolog\ErrorHandler;
 use Monolog\Formatter\JsonFormatter;
+use Monolog\Formatter\LineFormatter;
 use Monolog\Formatter\NormalizerFormatter;
 use Monolog\Handler\BrowserConsoleHandler;
 use Monolog\Handler\ChromePHPHandler;
@@ -330,13 +331,14 @@ trait LogTrait
 
         // 实例化一个日志实例, 参数是 channel name
         $logger               = new Logger($name);
-        $streamHandlerConsole = new StreamHandler('php://stdout', Logger::DEBUG);                         // 控制台输出
-        $infoFileHandler      = new RotatingFileHandler("$logPath/$filename.info.log", 7, Logger::INFO);  // INFO 等级文件处理器
-        $errorFileHandler     = new RotatingFileHandler("$logPath/$filename.error.log", 7, Logger::ERROR);// ERROR 等级文件处理器
-        $jsonFormatter        = (new JsonFormatter())->setDateFormat(NormalizerFormatter::SIMPLE_DATE);   // JSON 日志格式化
+        $streamHandlerConsole = new StreamHandler('php://stdout', Logger::DEBUG);                              // 控制台输出
+        $infoFileHandler      = new RotatingFileHandler("$logPath/$filename.info.log", 7, Logger::INFO);       // INFO 等级文件处理器
+        $errorFileHandler     = new RotatingFileHandler("$logPath/$filename.error.log", 7, Logger::ERROR);     // ERROR 等级文件处理器
+        $lineFormatter        = (new LineFormatter())->setDateFormat('Y-m-d H:i:s')->setJsonPrettyPrint(false);// Line 日志格式化
+        $jsonFormatter        = (new JsonFormatter())->setDateFormat('Y-m-d H:i:s')->setJsonPrettyPrint(false);// JSON 日志格式化
 
         if (PHP_SAPI === 'cli') {
-            $logger->pushHandler($streamHandlerConsole);
+            $logger->pushHandler($streamHandlerConsole->setFormatter($lineFormatter));
         }
         $fieldRegisterBrowserConsoleHandler = 'registerBrowserConsoleHandler';
         if (!empty($GLOBALS[$fieldRegisterBrowserConsoleHandler]) || !empty($_SERVER[$fieldRegisterBrowserConsoleHandler]) || !empty($_REQUEST[$fieldRegisterBrowserConsoleHandler]) || !empty($_ENV[$fieldRegisterBrowserConsoleHandler])) {
@@ -356,12 +358,8 @@ trait LogTrait
         $logger->pushProcessor(new ProcessIdProcessor())
                ->pushProcessor(new MemoryUsageProcessor())
                ->pushProcessor(new MemoryPeakUsageProcessor())
-               ->pushProcessor(new IntrospectionProcessor(Logger::WARNING))
-               ->pushProcessor(function($record) {
-                   $record['logTime'] = date('Y-m-d H:i:s');
-
-                   return $record;
-               });
+               ->pushProcessor(new IntrospectionProcessor(Logger::ERROR))
+               ->pushProcessor(function($record) { return $record; });
 
         $registerErrorHandler && ErrorHandler::register($logger);
 
