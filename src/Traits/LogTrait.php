@@ -12,7 +12,6 @@ use BadMethodCallException;
 use Monolog\ErrorHandler;
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Formatter\LineFormatter;
-use Monolog\Formatter\NormalizerFormatter;
 use Monolog\Handler\BrowserConsoleHandler;
 use Monolog\Handler\ChromePHPHandler;
 use Monolog\Handler\FirePHPHandler;
@@ -55,6 +54,9 @@ trait LogTrait
 
     /** @var bool 注册错误处理程序 */
     private $registerErrorHandler = false;
+
+    /** @var int 日志保留的天数 */
+    private $maxFiles = 7;
 
     /**
      * User: Sweeper
@@ -199,6 +201,29 @@ trait LogTrait
     }
 
     /**
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/5/24 10:28:20
+     * @return int
+     */
+    public function getMaxFiles(): int
+    {
+        return $this->maxFiles;
+    }
+
+    /**
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/5/24 10:28:23
+     * @param int $maxFiles
+     * @return $this
+     */
+    public function setMaxFiles(int $maxFiles): self
+    {
+        $this->maxFiles = $maxFiles;
+
+        return $this;
+    }
+
+    /**
      * 默认日志记录器
      * User: Sweeper
      * Time: 2023/7/27 13:47
@@ -212,20 +237,21 @@ trait LogTrait
      */
     public function getDefaultLogger(string $name = null, string $filename = null, string $logPath = null, bool $registerErrorHandler = null): Logger
     {
-        return $this->setLogger(static::getSpecificLogger($name ?? $this->getLoggerName(), $filename ?? $this->getFilename(), $logPath ?? $this->getLogPath(), $registerErrorHandler ?? $this->isRegisterErrorHandler()))->getLogger();
+        return $this->setLogger(static::getSpecificLogger($name ?? $this->getLoggerName(), $filename ?? $this->getFilename(), $logPath ?? $this->getLogPath(), $registerErrorHandler ?? $this->isRegisterErrorHandler(), $this))->getLogger();
     }
 
     /**
      * 获取指定 Logger
      * User: Sweeper
      * Time: 2023/9/1 11:23
-     * @param string|null $name
-     * @param string|null $filename
-     * @param string|null $logPath
-     * @param bool        $registerErrorHandler
+     * @param string|null   $name
+     * @param string|null   $filename
+     * @param string|null   $logPath
+     * @param bool          $registerErrorHandler
+     * @param LogTrait|null $log 实例化的对象
      * @return Logger
      */
-    public static function getSpecificLogger(string $name = null, string $filename = null, string $logPath = null, bool $registerErrorHandler = false): Logger
+    public static function getSpecificLogger(string $name = null, string $filename = null, string $logPath = null, bool $registerErrorHandler = false, self $log = null): Logger
     {
         /**
          * Handlers
@@ -328,14 +354,15 @@ trait LogTrait
         $name     = $name ?: $class->getName();
         $filename = $filename ?: $class->getShortName();
         $logPath  = $logPath ?: APP_PATH . '/runtime/log';
+        $maxFiles = $log ? $log->getMaxFiles() : 7;
 
         // 实例化一个日志实例, 参数是 channel name
         $logger               = new Logger($name);
-        $streamHandlerConsole = new StreamHandler('php://stdout', Logger::DEBUG);                              // 控制台输出
-        $infoFileHandler      = new RotatingFileHandler("$logPath/$filename.info.log", 7, Logger::INFO);       // INFO 等级文件处理器
-        $errorFileHandler     = new RotatingFileHandler("$logPath/$filename.error.log", 7, Logger::ERROR);     // ERROR 等级文件处理器
-        $lineFormatter        = (new LineFormatter())->setDateFormat('Y-m-d H:i:s')->setJsonPrettyPrint(false);// Line 日志格式化
-        $jsonFormatter        = (new JsonFormatter())->setDateFormat('Y-m-d H:i:s')->setJsonPrettyPrint(false);// JSON 日志格式化
+        $streamHandlerConsole = new StreamHandler('php://stdout', Logger::DEBUG);                                 // 控制台输出
+        $infoFileHandler      = new RotatingFileHandler("$logPath/$filename.info.log", $maxFiles, Logger::INFO);  // INFO 等级文件处理器
+        $errorFileHandler     = new RotatingFileHandler("$logPath/$filename.error.log", $maxFiles, Logger::ERROR);// ERROR 等级文件处理器
+        $lineFormatter        = (new LineFormatter())->setDateFormat('Y-m-d H:i:s')->setJsonPrettyPrint(false);   // Line 日志格式化
+        $jsonFormatter        = (new JsonFormatter())->setDateFormat('Y-m-d H:i:s')->setJsonPrettyPrint(false);   // JSON 日志格式化
 
         if (PHP_SAPI === 'cli') {
             $logger->pushHandler($streamHandlerConsole->setFormatter($lineFormatter));
