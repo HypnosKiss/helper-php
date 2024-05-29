@@ -2,10 +2,10 @@
 
 namespace Sweeper\HelperPhp\Logger\Logic;
 
+use Psr\Log\LogLevel;
 use ReflectionClass;
 use Sweeper\DesignPattern\Traits\MultiPattern;
 use Sweeper\HelperPhp\Logger\Logger;
-use Sweeper\HelperPhp\Logger\LoggerLevel;
 use Sweeper\HelperPhp\Logger\Output\ConsoleOutput;
 use Sweeper\HelperPhp\Logger\Output\FileOutput;
 use Sweeper\HelperPhp\Logger\Traits\LoggerTrait;
@@ -36,14 +36,15 @@ class Log
     {
         $uniqueKeyConsole = null;
         $uniqueKeyFile    = null;
-        $isUnique         = $isUnique ?? $this->config['isUnique'];
+        $config           = $this->getConfig();
+        $isUnique         = $isUnique ?? $config['isUnique'] ?? true;
         if ($isUnique) {
-            $uniqueKeyConsole = md5("{$logId}-Console-Output");
-            $uniqueKeyFile    = md5("{$logId}-File-Output");
+            $uniqueKeyConsole = md5("$logId-Console-Output");
+            $uniqueKeyFile    = md5("$logId-File-Output");
         }
         // 日志等级
-        $consoleLevel = $consoleLevel ?? ($this->config['consoleLevel'] ?? LoggerLevel::DEBUG);
-        $fileLevel    = $fileLevel ?? ($this->config['fileLevel'] ?? LoggerLevel::INFO);
+        $consoleLevel = $consoleLevel ?? ($config['consoleLevel'] ?? LogLevel::DEBUG);
+        $fileLevel    = $fileLevel ?? ($config['fileLevel'] ?? LogLevel::INFO);
         // 日志文件
         $class    = new ReflectionClass(static::class);
         $name     = $this->getLoggerName() ?: $class->getName();
@@ -54,7 +55,7 @@ class Log
         // 初始化日志记录器
         $logger = Logger::instance($logId)
                         ->register(new ConsoleOutput(), $consoleLevel, false, $uniqueKeyConsole)
-                        ->register(new FileOutput($logFile, true, $this->config['format'] ?? ''), $fileLevel, false, $uniqueKeyFile);
+                        ->register(new FileOutput($logFile, true, $config['format'] ?? ''), $fileLevel, false, $uniqueKeyFile);
 
         return $this->setLogger($logger)->getLogger();
     }

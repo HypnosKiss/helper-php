@@ -8,6 +8,7 @@
 
 namespace Sweeper\HelperPhp\Logger\Traits;
 
+use Psr\Log\LogLevel;
 use ReflectionClass;
 use Sweeper\HelperPhp\Logger\Logger;
 use Sweeper\HelperPhp\Logger\LoggerException;
@@ -23,12 +24,12 @@ use Sweeper\HelperPhp\Logger\Output\FileOutput;
  * Author: Sweeper <wili.lixiang@gmail.com>
  * DateTime: 2023/10/21 23:43
  * @Package \Sweeper\HelperPhp\Logger\Traits\LoggerTrait
- * @mixin  \Sweeper\HelperPhp\Logger\Logger
+ * @mixin Logger
  */
 trait LoggerTrait
 {
 
-    /** @var \Sweeper\Logger\Logger */
+    /** @var Logger */
     private $logger;
 
     /** @var string 日志记录器名字(ID) */
@@ -138,7 +139,7 @@ trait LoggerTrait
     /**
      * Author: Sweeper <wili.lixiang@gmail.com>
      * DateTime: 2023/10/15 22:14
-     * @return \Sweeper\Logger\Logger
+     * @return Logger
      */
     public function getLogger(): Logger
     {
@@ -152,7 +153,7 @@ trait LoggerTrait
     /**
      * Author: Sweeper <wili.lixiang@gmail.com>
      * DateTime: 2023/10/15 22:16
-     * @param \Sweeper\Logger\Logger $logger
+     * @param Logger $logger
      * @return $this
      */
     public function setLogger(Logger $logger): self
@@ -170,7 +171,7 @@ trait LoggerTrait
      * @param string|null $filename
      * @param string|null $logPath
      * @param string|null $logFile
-     * @return \Sweeper\HelperPhp\Logger\Logger
+     * @return Logger
      */
     public function getDefaultLogger(string $name = null, string $filename = null, string $logPath = null, string $logFile = null): Logger
     {
@@ -185,7 +186,7 @@ trait LoggerTrait
      * @param string|null $filename
      * @param string|null $logPath
      * @param string|null $logFile
-     * @return \Sweeper\Logger\Logger
+     * @return Logger
      */
     public static function getSpecificLogger(string $name = null, string $filename = null, string $logPath = null, string $logFile = null): Logger
     {
@@ -198,8 +199,8 @@ trait LoggerTrait
 
         // 初始化日志记录器
         return Logger::instance($logId)
-                     ->register(new ConsoleOutput(), LoggerLevel::DEBUG, false, md5("{$logId}-Console-Output"))
-                     ->register(new FileOutput($logFile, true), LoggerLevel::INFO, false, md5("{$logId}-File-Output"));
+                     ->register(new ConsoleOutput(), LogLevel::DEBUG, false, md5("$logId-Console-Output"))
+                     ->register(new FileOutput($logFile, true), LogLevel::INFO, false, md5("$logId-File-Output"));
     }
 
     /**

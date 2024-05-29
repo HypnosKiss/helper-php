@@ -27,8 +27,8 @@ use Throwable;
  * @doc https://cloud.tencent.com/developer/article/1915072
  * @mixin AMQPStreamConnection
  * @mixin AMQPChannel
- * @example RabbitMQ::instance(config('queue.sales_queue'))->setQueueConfigName('listing_sync_task')->publishMessage($body);
- * @example RabbitMQ::instance(config('queue.sales_queue'))->setQueueConfig(config('queue.sales_queue.queue.listing_sync_task'))->publishMessage($body)
+ * @example RabbitMQ::instance(config('queue.sales_queue'))->declareQueue()->setQueueConfigName('listing_sync_task')->publishMessage($body);
+ * @example RabbitMQ::instance(config('queue.sales_queue'))->declareQueue()->setQueueConfig(config('queue.sales_queue.queue.listing_sync_task'))->publishMessage($body)
  * @example RabbitMQ::instance(config('配置文件.指定配置'))->setQueueConfig(config('配置文件.指定配置.queue.指定队列配置'))->publishMessage($body)
  * // RabbitMQ::instance(config('配置文件.指定配置'))
  * //                        ->setQueueConfig([
@@ -36,10 +36,10 @@ use Throwable;
  * //                            'exchange_name' => '交换机名',
  * //                            'routing_key'   => '路由',
  * //                        ])
- * //                        ->configQueue('队列名')// 配置队列（声明交换机、声明队列、绑定队列到交换机）
+ * //                        ->declareQueue('队列名')// 配置队列（声明交换机、声明队列、绑定队列到交换机）
  * //                        ->produceMessage(['order_id' => 1234567], 'order_profit_ids')// 发布消息到指定的路由，不指定路由会发布到所有绑定当前交换机的队列
  * // RabbitMQ::instance(config('queue.rabbit_mq_pre'), static::CONSUME_QUEUE_NAME)
- * //                      ->configQueue(static::CONSUME_QUEUE_NAME, static::CONSUME_QUEUE_NAME)
+ * //                      ->declareQueue(static::CONSUME_QUEUE_NAME, static::CONSUME_QUEUE_NAME)
  * //                      ->produceMessage([
  * //                          'platform_code' => 'SE', 'item_id' => rand(999, 999999), 'account_id' => 155, 'salesman_name' => '李翔1', 'time' => date('Y-m-d H:i:s'),
  * //                      ], static::CONSUME_QUEUE_NAME);
@@ -47,7 +47,7 @@ use Throwable;
  * // $client = RabbitMQ::instance(config('queue.rabbit_mq_pre'))
  * //           ->setQueueConfigName('order_profit_ids')
  * //           ->setQueueConfig(['queue_name' => 'order_profit_ids','exchange_name' => 'default','routing_key' => 'order_profit_ids'])
- * //           ->configQueue('order_profit_ids');
+ * //           ->declareQueue('order_profit_ids');
  * //         for ($i = 0; $i < 10; $i++) {
  * //             $pushData = [
  * //                 'item_id'       => rand(1, 99) . 5125686379 . rand(10, 99),
@@ -354,7 +354,7 @@ class RabbitMQ
      * @return $this
      * @throws \Exception
      */
-    public function configQueue(string $queueName = '', string $routingKey = '', string $exchangeName = '', bool $exchangeDeclare = true, bool $queueDeclare = true, bool $queueBind = true): self
+    public function declareQueue(string $queueName = '', string $routingKey = '', string $exchangeName = '', bool $exchangeDeclare = true, bool $queueDeclare = true, bool $queueBind = true): self
     {
         $queueName    = $queueName ?: $this->getSpecifyConfig('queue_name');
         $exchangeName = $exchangeName ?: $this->getSpecifyConfig('exchange_name', null);
@@ -371,13 +371,12 @@ class RabbitMQ
         if (!$queueName) {
             throw new \InvalidArgumentException('The configuration is invalid，queue_name Cannot be empty.');
         }
-        $channel = $this->getChannel();
-        // 声明初始化交换机
-        $exchangeDeclare && $channel->exchange_declare($exchangeName, $exchangeType, $passive, $durable, $autoDelete, $internal, $nowait, $arguments, $ticket);
         // 声明初始化一条队列
-        $queueDeclare && $channel->queue_declare($queueName, $passive, $durable, $exclusive, $autoDelete, $nowait, $arguments, $ticket);
+        $queueDeclare && $this->getChannel()->queue_declare($queueName, $passive, $durable, $exclusive, $autoDelete, $nowait, $arguments, $ticket);
+        // 声明初始化交换机
+        $exchangeDeclare && $this->getChannel()->exchange_declare($exchangeName, $exchangeType, $passive, $durable, $autoDelete, $internal, $nowait, $arguments, $ticket);
         // 交换机队列绑定
-        $queueBind && $channel->queue_bind($queueName, $exchangeName, $routingKey, $nowait, $arguments, $ticket);
+        $queueBind && $this->getChannel()->queue_bind($queueName, $exchangeName, $routingKey, $nowait, $arguments, $ticket);
 
         return $this;
     }
@@ -395,6 +394,8 @@ class RabbitMQ
     public function produceMessage(array $body, string $routingKey = '', string $exchangeName = '', array $properties = []): bool
     {
         try {
+            // $this->declareQueue();// 不声明初始化一条队列，不会自动创建队列
+            // $this->getChannel()->queue_declare($queueName, $passive, $durable, $exclusive, $autoDelete);
             $message = new AMQPMessage(json_encode($body, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), array_replace(['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT], $properties));
             $this->getChannel()->basic_publish($message, $exchangeName ?: $this->getSpecifyConfig('exchange_name', null), $routingKey ?: $this->getSpecifyConfig('routing_key'));
             $flag = true;

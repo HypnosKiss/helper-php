@@ -5,6 +5,8 @@ namespace Sweeper\HelperPhp\Tool;
 use Sweeper\DesignPattern\Traits\MultiPattern;
 use Sweeper\HelperPhp\Traits\LogTrait;
 
+use function Sweeper\HelperPhp\camelize;
+
 /**
  * Monolog Logger
  * Created by PhpStorm.
@@ -53,6 +55,30 @@ class Logger
         }
 
         return $this->logger;
+    }
+
+    /**
+     * 初始化日志
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/5/24 16:40:02
+     * @param string|null $name
+     * @param array       $config
+     * @param bool        $dynamic
+     * @return $this
+     * @example Logger::initializeLogger()->info('test')
+     */
+    public static function initializeLogger(string $name = null, array $config = [], bool $dynamic = true): self
+    {
+        $callObject = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+
+        ['file' => $file, 'line' => $line, 'function' => $function, 'class' => $className] = $callObject;
+
+        $name       = $name ?: $className;
+        $config     = $config ?: ['file' => $file, 'class' => $className];
+        $loggerName = $config['loggerName'] ?? $name;
+        $filename   = $config['filename'] ?? camelize(str_replace("\\", '_', $className));
+
+        return static::instance($config, $name, $dynamic)->setLoggerName($loggerName)->setFilename($filename);
     }
 
 }
