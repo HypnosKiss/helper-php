@@ -9,7 +9,6 @@ namespace Sweeper\HelperPhp\Tool;
 
 use LogicException;
 use PhpAmqpLib\Channel\AMQPChannel;
-use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Connection\AMQPConnectionConfig;
 use PhpAmqpLib\Connection\AMQPConnectionFactory;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -27,8 +26,9 @@ use Throwable;
  * @doc https://cloud.tencent.com/developer/article/1915072
  * @mixin AMQPStreamConnection
  * @mixin AMQPChannel
- * @example RabbitMQ::instance(config('queue.sales_queue'))->declareQueue()->setQueueConfigName('listing_sync_task')->publishMessage($body);
- * @example RabbitMQ::instance(config('queue.sales_queue'))->declareQueue()->setQueueConfig(config('queue.sales_queue.queue.listing_sync_task'))->publishMessage($body)
+ * @example RabbitMQ::instance(config('queue.sales_queue'))->setQueueConfigName('listing_sync_task')->declareQueue()->publishMessage($body);
+ * @example RabbitMQ::instance(config('queue.sales_queue'))->setQueueConfig(config('queue.sales_queue.queue.listing_sync_task'))->declareQueue()->publishMessage($body)
+ * @example RabbitMQ::instance(config('queue.rabbit_mq_sync_task'))->setQueueConfig(['queue_name' => 'order_profit_ids', 'exchange_name' => 'default', 'routing_key' => 'order_profit_ids'])->declareQueue()->produceMessage(['order_id' => 123456789]);
  * @example RabbitMQ::instance(config('配置文件.指定配置'))->setQueueConfig(config('配置文件.指定配置.queue.指定队列配置'))->publishMessage($body)
  * // RabbitMQ::instance(config('配置文件.指定配置'))
  * //                        ->setQueueConfig([
