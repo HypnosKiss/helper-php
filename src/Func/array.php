@@ -553,7 +553,7 @@ function array_index($array, $compare_fn_or_value)
  * array sum by key
  * @param        $arr
  * @param string $key
- * @return mixed
+ * @return float|int
  */
 function array_sum_by($arr, string $key = '')
 {
@@ -829,9 +829,9 @@ function array_transform(array $data, array $rules)
  * 根据指定下标获取多维数组所有值，无下标时获取所有
  * @param string $key
  * @param array  $arr
- * @return array|mixed
+ * @return array
  */
-function array_value_recursive(array $arr, string $key = '')
+function array_value_recursive(array $arr, string $key = ''): array
 {
     $val = [];
     array_walk_recursive($arr, function($v, $k) use ($key, &$val) {

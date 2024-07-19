@@ -19,6 +19,7 @@
     "require": {
         "php": ">=7.2",
         "ext-curl": "*",
+        "ext-iconv": "*",
         "ext-json": "*",
         "ext-libxml": "*",
         "ext-mbstring": "*",

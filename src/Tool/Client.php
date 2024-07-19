@@ -195,9 +195,9 @@ class Client
 
     /**
      * 获取浏览器标识
-     * @return mixed
+     * @return array
      */
-    public static function getBrowser()
+    public static function getBrowser(): array
     {
         $sys = $_SERVER['HTTP_USER_AGENT'];
         if (stripos($sys, 'NetCaptor') > 0) {

@@ -1052,33 +1052,33 @@ if (!function_exists('get_file_permission')) {
     {
         clearstatcache(true, $filename);
         $perms = fileperms($filename);
-        if (($perms&0xC000) === 0xC000) {
+        if (($perms & 0xC000) === 0xC000) {
             $info = 's';
-        } elseif (($perms&0xA000) === 0xA000) {
+        } elseif (($perms & 0xA000) === 0xA000) {
             $info = 'l';
-        } elseif (($perms&0x8000) === 0x8000) {
+        } elseif (($perms & 0x8000) === 0x8000) {
             $info = '-';
-        } elseif (($perms&0x6000) === 0x6000) {
+        } elseif (($perms & 0x6000) === 0x6000) {
             $info = 'b';
-        } elseif (($perms&0x4000) === 0x4000) {
+        } elseif (($perms & 0x4000) === 0x4000) {
             $info = 'd';
-        } elseif (($perms&0x2000) === 0x2000) {
+        } elseif (($perms & 0x2000) === 0x2000) {
             $info = 'c';
-        } elseif (($perms&0x1000) === 0x1000) {
+        } elseif (($perms & 0x1000) === 0x1000) {
             $info = 'p';
         } else {
             $info = 'u';
         }
 
-        $info .= (($perms&0x0100) ? 'r' : '-');
-        $info .= (($perms&0x0080) ? 'w' : '-');
-        $info .= (($perms&0x0040) ? (($perms&0x0800) ? 's' : 'x') : (($perms&0x0800) ? 'S' : '-'));
-        $info .= (($perms&0x0020) ? 'r' : '-');
-        $info .= (($perms&0x0010) ? 'w' : '-');
-        $info .= (($perms&0x0008) ? (($perms&0x0400) ? 's' : 'x') : (($perms&0x0400) ? 'S' : '-'));
-        $info .= (($perms&0x0004) ? 'r' : '-');
-        $info .= (($perms&0x0002) ? 'w' : '-');
-        $info .= (($perms&0x0001) ? (($perms&0x0200) ? 't' : 'x') : (($perms&0x0200) ? 'T' : '-'));
+        $info .= (($perms & 0x0100) ? 'r' : '-');
+        $info .= (($perms & 0x0080) ? 'w' : '-');
+        $info .= (($perms & 0x0040) ? (($perms & 0x0800) ? 's' : 'x') : (($perms & 0x0800) ? 'S' : '-'));
+        $info .= (($perms & 0x0020) ? 'r' : '-');
+        $info .= (($perms & 0x0010) ? 'w' : '-');
+        $info .= (($perms & 0x0008) ? (($perms & 0x0400) ? 's' : 'x') : (($perms & 0x0400) ? 'S' : '-'));
+        $info .= (($perms & 0x0004) ? 'r' : '-');
+        $info .= (($perms & 0x0002) ? 'w' : '-');
+        $info .= (($perms & 0x0001) ? (($perms & 0x0200) ? 't' : 'x') : (($perms & 0x0200) ? 'T' : '-'));
 
         return $info;
     }
@@ -1146,7 +1146,7 @@ if (!function_exists('send_ding_talk_message')) {
     function send_ding_talk_message(string $webhook, string $message, array $data = []): bool
     {
         $data      = $data ?: ['msgtype' => 'text', 'text' => ['content' => $message]];
-        $json_data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+        $json_data = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $webhook);
@@ -1335,10 +1335,13 @@ if (!function_exists('run_command')) {
      * 运行命令，并获取命令输出（直至进程结束）
      * Author: Sweeper <wili.lixiang@gmail.com>
      * DateTime: 2023/10/22 23:41
-     * @param string $command
-     * @param array  $param
+     * @param string     $command
+     * @param array      $param
+     * @param array      $pipes
+     * @param null       $cwd
+     * @param array|null $env
+     * @param array|null $other_options
      * @return string|null
-     * @throws \Exception
      */
     function run_command(string $command, array $param = [], array &$pipes = [], $cwd = null, array $env = null, array $other_options = null): ?string
     {
@@ -1562,7 +1565,7 @@ if (!function_exists('download_zip_file')) {
         }
         // 打开/创建目标压缩文件
         $targetZipArchive = new \ZipArchive();
-        $targetResult     = $targetZipArchive->open($targetArchive, \ZipArchive::CREATE|\ZipArchive::OVERWRITE);
+        $targetResult     = $targetZipArchive->open($targetArchive, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
         if ($targetResult !== true) {// 检查文件是否成功打开
             throw new \InvalidArgumentException('创建压缩文件失败，请稍后重试');
         }
@@ -1751,7 +1754,7 @@ if (!function_exists('json_output')) {
     function json_output(array $data = [], int $code = 1, string $msg = 'Success', int $httpCode = 200, array $headers = ['Content-Type' => 'application/json ; charset=utf-8'], $options = 0)
     {
         // 处理输出数据
-        $_data = json_encode(['code' => $code, 'msg' => $msg, 'data' => $data], $options ?? JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+        $_data = json_encode(['code' => $code, 'msg' => $msg, 'data' => $data], $options ?? JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
         if (!empty($headers) && !headers_sent()) {
             // 发送状态码
@@ -1945,3 +1948,25 @@ if (!function_exists('extract_array_by_xpath')) {
     }
 }
 
+if (!function_exists('invoke_reflection_class')) {
+    /**
+     * 调用反射类的方法
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/7/19 15:25:57
+     * @param string      $class     类名
+     * @param string|null $args      实例化类参数
+     * @param string      $method    调用方法
+     * @param array|null  $parameter 方法参数
+     * @return mixed
+     * @throws \ReflectionException
+     */
+    function invoke_reflection_class(string $class, ?string $args = null, string $method = '', ?array $parameter = null)
+    {
+        $refClass  = new \ReflectionClass($class); // 传入对象或类名，得到ReflectionClass对象
+        $instance  = $refClass->newInstance($args);// 从指定的参数创建一个新的类实例
+        $refMethod = $refClass->getMethod($method);// 得到ReflectionMethod对象, $method 方法
+        $refMethod->setAccessible(true);           // 设置为可见，也就是可访问
+
+        return $refMethod->invoke($instance, $parameter);// 传入对象来访问这个方法，通过反射类ReflectionMethod调用指定实例的方法，并且传送参数
+    }
+}
