@@ -1967,6 +1967,6 @@ if (!function_exists('invoke_reflection_class')) {
         $refMethod = $refClass->getMethod($method);// 得到ReflectionMethod对象, $method 方法
         $refMethod->setAccessible(true);           // 设置为可见，也就是可访问
 
-        return $refMethod->invoke($instance, $parameter);// 传入对象来访问这个方法，通过反射类ReflectionMethod调用指定实例的方法，并且传送参数
+        return $refMethod->invokeArgs($instance, $parameter);// 传入对象来访问这个方法，通过反射类ReflectionMethod调用指定实例的方法，并且传送参数
     }
 }
