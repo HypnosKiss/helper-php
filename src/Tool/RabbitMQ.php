@@ -264,6 +264,8 @@ class RabbitMQ
     {
         $this->getChannel()->close();
         $this->getConnection()->close();
+        $this->channel    = null;
+        $this->connection = null;
 
         return $this;
     }
@@ -396,7 +398,7 @@ class RabbitMQ
         try {
             // $this->declareQueue();// 不声明初始化一条队列，不会自动创建队列
             // $this->getChannel()->queue_declare($queueName, $passive, $durable, $exclusive, $autoDelete);
-            $message = new AMQPMessage(json_encode($body, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), array_replace(['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT], $properties));
+            $message = new AMQPMessage(json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), array_replace(['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT], $properties));
             $this->getChannel()->basic_publish($message, $exchangeName ?: $this->getSpecifyConfig('exchange_name', null), $routingKey ?: $this->getSpecifyConfig('routing_key'));
             $flag = true;
         } catch (Throwable $ex) {
@@ -602,7 +604,7 @@ class RabbitMQ
             $port     = $config['port'];
             $user     = $config['user'];
             $password = $config['password'];
-            $vhost    = $hostdef['vhost'] ?? '/';
+            $vhost    = $config['vhost'] ?? '/';
             // 选项信息
             $options = array_filter(array_replace([
                 'insist'             => false,
