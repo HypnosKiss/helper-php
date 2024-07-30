@@ -8,7 +8,9 @@
 namespace Sweeper\HelperPhp\Tool;
 
 use LogicException;
+use PhpAmqpLib\Channel\AbstractChannel;
 use PhpAmqpLib\Channel\AMQPChannel;
+use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Connection\AMQPConnectionConfig;
 use PhpAmqpLib\Connection\AMQPConnectionFactory;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
@@ -254,6 +256,49 @@ class RabbitMQ
     }
 
     /**
+     * 重新连接
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/7/30 10:25:15
+     * @return $this
+     * @throws \Exception
+     */
+    public function reconnection(): self
+    {
+        $this->close()->getChannel();
+
+        return $this;
+    }
+
+    /**
+     * 重新连接指定连接
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/7/30 10:45:50
+     * @param AbstractChannel $channel
+     * @return $this
+     * @throws \PhpAmqpLib\Exception\AMQPIOException
+     */
+    public function reconnectByChannel(AbstractChannel $channel): self
+    {
+        $connection = $channel->getConnection();
+        if (!$connection || !$connection->isConnected()) {
+            $connection->reconnect();
+            $connection->checkHeartBeat();
+        }
+
+        return $this;
+    }
+
+    public function reconnect(AbstractConnection $connection): self
+    {
+        if (!$connection->isConnected()) {
+            $connection->reconnect();
+            $connection->checkHeartBeat();
+        }
+
+        return $this;
+    }
+
+    /**
      * 关闭
      * User: Sweeper
      * Time: 2023/8/30 11:10
@@ -478,7 +523,7 @@ class RabbitMQ
         } catch (Throwable $ex) {
             // 如果是因为连接关闭，自动重连
             if (strpos($ex->getMessage(), 'Broken pipe or closed connection') !== false) {
-                $this->close()->getChannel();// 会自动连接
+                $this->reconnection();// 会自动连接
             }
             is_callable($exceptionCallback) && $exceptionCallback($ex);
 
