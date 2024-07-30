@@ -463,11 +463,12 @@ class RabbitMQ
      * @param array         $options
      * @param bool          $autoAck
      * @param int           $limit
+     * @param int           $timeout
      * @param int           $totalCount
      * @return void
      * @throws \Exception
      */
-    public function consumeMessage(callable $callback, callable $exceptionCallback = null, array $options = [], bool $autoAck = true, int $limit = 0, int &$totalCount = 0): void
+    public function consumeMessage(callable $callback, callable $exceptionCallback = null, array $options = [], bool $autoAck = true, int $limit = 0, int $timeout = 0, int &$totalCount = 0): void
     {
         $prefetchSize  = $options['prefetch_size'] ?? null;
         $prefetchCount = $options['prefetch_count'] ?? 0;// 限流：最多允许的消息数量，达到上限则队列不再继续获取消息处理,默认0不限制
@@ -518,7 +519,7 @@ class RabbitMQ
                     echo date('Y-m-d H:i:s'), ' [x] basic_get message ', "已消费[{$totalCount}]个消息, 超出限制[{$limit}]，循环获取队列消息终止", PHP_EOL;
                     break;
                 }
-                $this->getChannel()->wait();
+                $this->getChannel()->wait(null, false, $timeout);
             }
         } catch (Throwable $ex) {
             // 如果是因为连接关闭，自动重连
