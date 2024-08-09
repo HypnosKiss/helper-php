@@ -74,7 +74,7 @@ use Throwable;
  * //             return true;
  * //             // 这里不返回 true，表示不确认消息
  * //         }, null, ['no_local' => true, 'prefetch_count' => 2]);
- * //        $client->basicGetMessage(null, function() {},1000);
+ * //        $client->basicGetMessage(function(AMQPMessage $msg) {},1000);
  */
 class RabbitMQ
 {
@@ -92,6 +92,9 @@ class RabbitMQ
 
     /** @var string 队列配置名 */
     private $queueConfigName;
+
+    /** @var callable 循环等待(消息)处理函数 */
+    private $waitHandler;
 
     /** @var string (默认)直接交换器，工作方式类似于单播，Exchange会将消息发送完全匹配ROUTING_KEY的Queue, */
     public const DIRECT = 'direct';
@@ -206,6 +209,18 @@ class RabbitMQ
     public function setQueueConfig(array $queueConfig): self
     {
         $this->queueConfig = $queueConfig;
+
+        return $this;
+    }
+
+    public function getWaitHandler(): ?callable
+    {
+        return $this->waitHandler;
+    }
+
+    public function setWaitHandler(callable $waitHandler): self
+    {
+        $this->waitHandler = $waitHandler;
 
         return $this;
     }
@@ -512,11 +527,14 @@ class RabbitMQ
                 }
             }, $ticket, $arguments);
 
+            // 循环等待消息, 替代方法 $this->getChannel()->consume();
             while ($this->getChannel()->is_open()) {// $this->channel->is_consuming()
                 echo date('Y-m-d H:i:s'), " [x] channel->wait\n";
 
+                is_callable($this->getWaitHandler()) && call_user_func($this->getWaitHandler());
+
                 if ($limit > 0 && $totalCount >= $limit) {
-                    echo date('Y-m-d H:i:s'), ' [x] basic_get message ', "已消费[{$totalCount}]个消息, 超出限制[{$limit}]，循环获取队列消息终止", PHP_EOL;
+                    echo date('Y-m-d H:i:s'), ' [x] consume message ', "已消费[$totalCount]个消息, 超出限制[$limit]，循环获取队列消息终止", PHP_EOL;
                     break;
                 }
                 $this->getChannel()->wait(null, false, $timeout);
@@ -550,6 +568,9 @@ class RabbitMQ
         while (true) {
             /** @var AMQPMessage $msg */
             $amqpMessage = $this->basic_get($queueName);
+
+            is_callable($this->getWaitHandler()) && call_user_func($this->getWaitHandler());
+
             if ($amqpMessage === null) {
                 if (!$emptyMessage) {
                     echo date('Y-m-d H:i:s'), ' [x] basic_get message ', "第[{$totalCount}]个消息后无数据，usleep(200000)", PHP_EOL;
@@ -580,7 +601,7 @@ class RabbitMQ
                 }
             }
             if ($limit > 0 && $totalCount >= $limit) {
-                echo date('Y-m-d H:i:s'), ' [x] basic_get message ', "已消费[{$totalCount}]个消息, 超出限制[{$limit}]，循环获取队列消息终止", PHP_EOL;
+                echo date('Y-m-d H:i:s'), ' [x] basic_get message ', "已消费[$totalCount]个消息, 超出限制[$limit]，循环获取队列消息终止", PHP_EOL;
                 break;
             }
         }
