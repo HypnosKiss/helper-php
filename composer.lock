@@ -1414,16 +1414,16 @@
         },
         {
             "name": "sweeper/guzzlehttp-request",
-            "version": "1.1.4",
+            "version": "1.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/HypnosKiss/guzzlehttp-request.git",
-                "reference": "b19a30c755a3c7063b9cf2bf0577da9ff268f833"
+                "reference": "7d11fb255a7bb9f485acefbdb010dd3cd72a64fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/HypnosKiss/guzzlehttp-request/zipball/b19a30c755a3c7063b9cf2bf0577da9ff268f833",
-                "reference": "b19a30c755a3c7063b9cf2bf0577da9ff268f833",
+                "url": "https://api.github.com/repos/HypnosKiss/guzzlehttp-request/zipball/7d11fb255a7bb9f485acefbdb010dd3cd72a64fb",
+                "reference": "7d11fb255a7bb9f485acefbdb010dd3cd72a64fb",
                 "shasum": ""
             },
             "require": {
@@ -1464,9 +1464,9 @@
             ],
             "support": {
                 "issues": "https://github.com/HypnosKiss/guzzlehttp-request/issues",
-                "source": "https://github.com/HypnosKiss/guzzlehttp-request/tree/1.1.4"
+                "source": "https://github.com/HypnosKiss/guzzlehttp-request/tree/1.1.5"
             },
-            "time": "2024-05-13T01:25:43+00:00"
+            "time": "2024-11-13T08:40:28+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",

@@ -1970,3 +1970,64 @@ if (!function_exists('invoke_reflection_class')) {
         return $refMethod->invokeArgs($instance, $parameter);// 传入对象来访问这个方法，通过反射类ReflectionMethod调用指定实例的方法，并且传送参数
     }
 }
+
+if (!function_exists('getFileUrlExt')) {
+    /**
+     * 获取文件后缀
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/11/7 10:45:34
+     * @param      $url
+     * @param bool $isGetContent
+     * @return array [$extension, $isImage]
+     */
+    function getFileUrlExt($url, bool $isGetContent = false): array
+    {
+        if ($isGetContent) {
+            $fileContent = file_get_contents($url);
+            $finfo       = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType    = finfo_buffer($finfo, $fileContent);
+            finfo_close($finfo);
+
+            // $tempFile = tempnam(sys_get_temp_dir(), 'temp');
+            // file_put_contents($tempFile, file_get_contents($url));
+            //
+            // $mimeType = mime_content_type($tempFile);
+            // unlink($tempFile); // 删除临时文件
+        } else {
+            //校验能否获取响应状态
+            stream_context_set_default([
+                'ssl' => [
+                    'verify_host'      => false,
+                    'verify_peer'      => false,
+                    'verify_peer_name' => false,
+                ],
+            ]);
+            $headers  = get_headers($url, 1);
+            $mimeType = isset($headers['Content-Type']) ? trim($headers['Content-Type']) : null;
+        }
+
+        // 根据 MIME 类型推断扩展名
+        switch ($mimeType) {
+            case 'image/jpeg':
+                $extension = 'jpg';
+                break;
+            case 'image/png':
+                $extension = 'png';
+                break;
+            case 'image/gif':
+                $extension = 'gif';
+                break;
+            case 'image/bmp':
+                $extension = 'bmp';
+                break;
+            case 'image/webp':
+                $extension = 'webp';
+                break;
+            default:
+                $extension = '';// unknown
+        }
+        $isImage = stripos($mimeType, 'image/') === 0;
+
+        return [$extension, $isImage];
+    }
+}

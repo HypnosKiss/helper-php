@@ -27,17 +27,17 @@ class Request extends ServiceRequest
     public const DING_TALK_URL = 'https://oapi.dingtalk.com';
 
     /** @var string API 地址 */
-    public const DING_TALK_API_URL    = 'https://api.dingtalk.com';
+    public const DING_TALK_API_URL = 'https://api.dingtalk.com';
 
-    public const MSG_TYPE_TEXT        = 'text';
+    public const MSG_TYPE_TEXT = 'text';
 
-    public const MSG_TYPE_LINK        = 'link';
+    public const MSG_TYPE_LINK = 'link';
 
-    public const MSG_TYPE_MARKDOWN    = 'markdown';
+    public const MSG_TYPE_MARKDOWN = 'markdown';
 
     public const MSG_TYPE_ACTION_CARD = 'actionCard';
 
-    public const MSG_TYPE_FEED_CARD   = 'feedCard';
+    public const MSG_TYPE_FEED_CARD = 'feedCard';
 
     /** @var string 整体跳转ActionCard类型 */
     public const  ACTION_CARD_WHOLE = 'whole';
@@ -450,7 +450,7 @@ class Request extends ServiceRequest
      * @param bool  $wordWrap 自动换行
      * @return string
      */
-    public static function formatAtText(array $atMobiles = [], array $atUserIds = [], bool $wordWrap = true)
+    public static function formatAtText(array $atMobiles = [], array $atUserIds = [], bool $wordWrap = true): string
     {
         $atText = '';
         foreach ($atMobiles as $atMobile) {
@@ -479,8 +479,8 @@ class Request extends ServiceRequest
      */
     public static function generateTextData(string $content, bool $isAtAll = false, array $atMobiles = [], array $atUserIds = []): array
     {
-        $format = static::MSG_TYPE_FORMAT[static::MSG_TYPE_TEXT];
-        $text   .= static::formatAtText($atMobiles, $atUserIds);
+        $format  = static::MSG_TYPE_FORMAT[static::MSG_TYPE_TEXT];
+        $content .= static::formatAtText($atMobiles, $atUserIds, false);
 
         return array_replace_recursive($format, [
             'text' => [
