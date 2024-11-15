@@ -1971,7 +1971,7 @@ if (!function_exists('invoke_reflection_class')) {
     }
 }
 
-if (!function_exists('getFileUrlExt')) {
+if (!function_exists('get_file_url_ext')) {
     /**
      * 获取文件后缀
      * Author: Sweeper <wili.lixiang@gmail.com>
@@ -1980,7 +1980,7 @@ if (!function_exists('getFileUrlExt')) {
      * @param bool $isGetContent
      * @return array [$extension, $isImage]
      */
-    function getFileUrlExt($url, bool $isGetContent = false): array
+    function get_file_url_ext($url, bool $isGetContent = false): array
     {
         if ($isGetContent) {
             $fileContent = file_get_contents($url);
@@ -2029,5 +2029,23 @@ if (!function_exists('getFileUrlExt')) {
         $isImage = stripos($mimeType, 'image/') === 0;
 
         return [$extension, $isImage];
+    }
+}
+
+if (!function_exists('get_class_methods_only')) {
+    /**
+     * 仅获取指定类方法
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/11/15 10:14:26
+     * @param $class
+     * @return array
+     */
+    function get_class_methods_only($class): array
+    {
+        $parentClass   = get_parent_class($class);
+        $classMethods  = get_class_methods($class);
+        $parentMethods = $parentClass ? get_class_methods($parentClass) : [];
+
+        return array_diff($classMethods, $parentMethods);
     }
 }
