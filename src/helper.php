@@ -74,7 +74,7 @@ if (!function_exists('array_merge_to_one')) {
         $newArray = [];
         foreach ($array as $item) {
             if (is_array($item)) {
-                $newArray = array_merge($newArray, array_merge_rec($item));
+                $newArray = array_merge($newArray, array_merge_to_one($item));
             } else {
                 $newArray[] = $item;
             }
@@ -298,8 +298,8 @@ if (!function_exists('format_seconds')) {
     function format_seconds($sec): array
     {
         $result            = [];
-        $result['days']    = floor($sec / (24 * 3600));
-        $sec               %= (24 * 3600);
+        $result['days']    = floor($sec / (86400));
+        $sec               %= (86400);
         $result['hours']   = floor($sec / 3600);
         $remainSeconds     = $sec % 3600;
         $result['minutes'] = floor($remainSeconds / 60);
@@ -331,11 +331,11 @@ if (!function_exists('time_to_text')) {
             return (int)($time / 60) . '分' . time_to_text($time % 60);
         }
 
-        if (3600 * 24 > $time) {    // 时
+        if (86400 > $time) {    // 时
             return (int)($time / 3600) . '时' . time_to_text($time % 3600);
         }
 
-        return (int)($time / (3600 * 24)) . '天' . time_to_text($time % (3600 * 24));
+        return (int)($time / (86400)) . '天' . time_to_text($time % (86400));
     }
 }
 
@@ -1754,7 +1754,7 @@ if (!function_exists('json_output')) {
     function json_output(array $data = [], int $code = 1, string $msg = 'Success', int $httpCode = 200, array $headers = ['Content-Type' => 'application/json ; charset=utf-8'], $options = 0)
     {
         // 处理输出数据
-        $_data = json_encode(['code' => $code, 'msg' => $msg, 'data' => $data], $options ?? JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $_data = json_encode(['code' => $code, 'msg' => $msg, 'data' => $data], $options ?? (JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
         if (!empty($headers) && !headers_sent()) {
             // 发送状态码
@@ -2047,5 +2047,86 @@ if (!function_exists('get_class_methods_only')) {
         $parentMethods = $parentClass ? get_class_methods($parentClass) : [];
 
         return array_diff($classMethods, $parentMethods);
+    }
+}
+
+if (!function_exists('remote_file_exists')) {
+    /**
+     * 判断远程文件是否存在
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/11/22 11:20:02
+     * @param $url
+     * @return array [$exists, $headers]
+     */
+    function remote_file_exists($url): array
+    {
+        $headers = @get_headers($url, 1);
+
+        return [stripos($headers[0], '200 OK') !== false, $headers];
+    }
+}
+
+if (!function_exists('convert_remote_image_to_format')) {
+    /**
+     * 将远程图片转换为指定格式
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/11/28 11:32:11
+     * @param string $remoteUrl    远程图片地址/图片内容
+     * @param string $outputPath   输出路径
+     * @param string $outputFormat 指定格式
+     * @param bool   $isContent
+     * @return mixed
+     */
+    function convert_remote_image_to_format(string $remoteUrl, string $outputPath, string $outputFormat = 'jpg', bool $isContent = false)
+    {
+        $dir = pathinfo($outputPath, PATHINFO_DIRNAME);
+        if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) {
+            throw_exception(sprintf('Directory "%s" was not created', $dir));
+        }
+
+        // Step 1: 下载远程图片
+        $imageContent = $isContent ? $remoteUrl : file_get_contents($remoteUrl);
+        if ($imageContent === false) {
+            throw_exception('无法下载远程图片');
+        }
+        if (extension_loaded('gd')) {
+            // Step 2: 创建图像资源
+            $image = imagecreatefromstring($imageContent);
+            if ($image === false) {
+                throw_exception('无法创建图像资源');
+            }
+
+            // Step 3: 转换图像格式
+            switch (strtolower($outputFormat)) {
+                case 'jpg':
+                case 'jpeg':
+                    if (!imagejpeg($image, $outputPath)) {
+                        throw_exception('无法保存为JPEG格式');
+                    }
+                    break;
+                case 'png':
+                    if (!imagepng($image, $outputPath)) {
+                        throw_exception('无法保存为PNG格式');
+                    }
+                    break;
+                case 'gif':
+                    if (!imagegif($image, $outputPath)) {
+                        throw_exception('无法保存为GIF格式');
+                    }
+                    break;
+                default:
+                    throw_exception('不支持的图像格式');
+            }
+
+            // 释放图像资源
+            imagedestroy($image);
+        } else {
+            file_put_contents($outputPath, $imageContent);
+            if (!is_file($outputPath)) {
+                throw_exception('保存为本地文件失败');
+            }
+        }
+
+        return $outputPath;
     }
 }
