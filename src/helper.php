@@ -2,6 +2,9 @@
 
 namespace Sweeper\HelperPhp;
 
+use DateTime;
+use DateTimeZone;
+
 use function Sweeper\HelperPhp\Func\array_clear_empty;
 use function Sweeper\HelperPhp\Func\format_size;
 use function Sweeper\HelperPhp\Func\resolve_size;
@@ -2128,5 +2131,33 @@ if (!function_exists('convert_remote_image_to_format')) {
         }
 
         return $outputPath;
+    }
+}
+
+if (!function_exists('convert_time_zone')) {
+    /**
+     * 时区转换
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/12/5 14:17:02
+     * @param string $time
+     * @param string $fromTimezone
+     * @param string $toTimezone
+     * @param string $format
+     * @return DateTime|string
+     * @throws \Exception
+     */
+    function convert_time_zone(string $time = 'now', string $fromTimezone = 'Etc/GMT-3', string $toTimezone = 'Etc/GMT-8', string $format = 'Y-m-d H:i:s')
+    {
+        // 创建一个表示 UTC+03:00 时间的 DateTime 对象
+        $dateTime = new DateTime($time, new DateTimeZone($fromTimezone));
+
+        // 设置目标时区为 UTC+08:00
+        $targetTimeZone = new DateTimeZone($toTimezone);
+
+        // 将 DateTime 对象转换为目标时区
+        $dateTime->setTimezone($targetTimeZone);
+
+        // 输出转换后的时间
+        return $format ? $dateTime->format($format) : $dateTime;
     }
 }
