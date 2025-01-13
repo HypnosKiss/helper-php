@@ -239,15 +239,14 @@ class RabbitMQ
     }
 
     /**
-     * 连接 AMQP
-     * User: Sweeper
-     * Time: 2023/3/23 14:38
+     * 初始化配置
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/1/13 09:43:44
      * @param string $name
      * @param array  $config
-     * @return AMQPStreamConnection
-     * @throws \Exception
+     * @return $this
      */
-    public function connection(string $name = '', array $config = []): AMQPStreamConnection
+    public function initConfig(string $name = '', array $config = []): self
     {
         $nameConfig = [];
         if (empty($this->getConfig())) {
@@ -262,7 +261,26 @@ class RabbitMQ
          * $this->queueConfig 为指定的队列配置如 queue_name、exchange_name、routeing_key ...
          */
         $config = $this->setConfig(array_replace($this->loadConfig(), $this->getConfig(), $nameConfig, $config))->getConfig() ?: [];
-        $this->setQueueConfig(array_replace($config['queue'] ?? [], $config['queue'][$this->getQueueConfigName()] ?? [], $this->queueConfig))->getQueueConfig();
+        $this->setQueueConfig(array_replace($config['queue'] ?? [], $config['queue'][$this->getQueueConfigName()] ?? [], $this->getQueueConfig()))->getQueueConfig();
+        if (!$config['host'] || !$config['port'] || !$config['username'] || !$config['password']) {
+            throw new \InvalidArgumentException('配置无效，请检查配置信息');
+        }
+
+        return $this;
+    }
+
+    /**
+     * 连接 AMQP
+     * User: Sweeper
+     * Time: 2023/3/23 14:38
+     * @param string $name
+     * @param array  $config
+     * @return AMQPStreamConnection
+     * @throws \Exception
+     */
+    public function connection(string $name = '', array $config = []): AMQPStreamConnection
+    {
+        $config = $this->initConfig($name, $config)->getConfig();
         if (!$config['host'] || !$config['port'] || !$config['username'] || !$config['password']) {
             throw new \InvalidArgumentException('配置无效，请检查配置信息');
         }
@@ -458,7 +476,7 @@ class RabbitMQ
         try {
             // $this->declareQueue();// 不声明初始化一条队列，不会自动创建队列
             // $this->getChannel()->queue_declare($queueName, $passive, $durable, $exclusive, $autoDelete);
-            $message = new AMQPMessage(json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), array_replace(['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT], $properties));
+            $message = new AMQPMessage(json_encode($body, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), array_replace(['delivery_mode' => AMQPMessage::DELIVERY_MODE_PERSISTENT], $properties));
             $this->getChannel()->basic_publish($message, $exchangeName ?: $this->getSpecifyConfig('exchange_name', null), $routingKey ?: $this->getSpecifyConfig('routing_key'));
             $flag = true;
         } catch (Throwable $ex) {
