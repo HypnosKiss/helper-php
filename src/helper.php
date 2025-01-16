@@ -2161,3 +2161,39 @@ if (!function_exists('convert_time_zone')) {
         return $format ? $dateTime->format($format) : $dateTime;
     }
 }
+
+if (!function_exists('delete_logs')) {
+    function delete_logs($dir): bool
+    {
+        if (!is_dir($dir)) {
+            throw new \InvalidArgumentException('The provided path is not a directory.');
+        }
+        $files = scandir($dir, SCANDIR_SORT_ASCENDING);
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..') {
+                // Skip current and parent directories
+                continue;
+            }
+            $path = "$dir/$file";
+            if (is_dir($path)) {
+                // Recursively delete logs in subdirectories
+                delete_logs($path);
+            } elseif (is_file($path) && pathinfo($path, PATHINFO_EXTENSION) === 'log') {
+                // Delete log file
+                if (unlink($path)) {
+                    // "Deleted log file: $path"
+                    echo "Deleted log file: $path", PHP_EOL;
+                } else {
+                    echo "Failed to delete log file: $path", PHP_EOL;
+                }
+            }
+        }
+
+        // Try to delete the now empty directory: $dir
+        if (!rmdir($dir)) {
+            echo "Failed to delete directory: $dir", PHP_EOL;
+        }
+
+        return true;
+    }
+}
