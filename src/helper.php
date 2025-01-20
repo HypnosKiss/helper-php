@@ -2197,3 +2197,90 @@ if (!function_exists('delete_logs')) {
         return true;
     }
 }
+
+if (!function_exists('convert_weight')) {
+    /**
+     * 重量单位转换
+     * PHP 重量单位转换
+     * 为了进行重量单位转换，我们需要定义转换的规则。通常，重量单位之间的转换关系如下：
+     * 1 克 (g) = 1000 毫克 (mg)
+     * 1 千克 (kg) = 1000 克 (g)
+     * 1 吨 (t) = 1000 千克 (kg)
+     * 假设我们主要关注毫克（mg）与其他单位之间的转换，我们可以编写一个 PHP 函数来实现这一功能。
+     * 定义转换函数
+     * 首先，我们需要一个函数，该函数接收当前重量和单位，以及目标单位，然后返回转换后的重量。
+     * 实现转换逻辑
+     * 在函数内部，我们可以使用条件语句来处理不同的单位转换。对于给定的背景知识中提到的 'mg' 单位，我们可以扩展这个函数以支持更多的单位转换。
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/1/20 09:51:11
+     * @param $weight
+     * @param $fromUnit
+     * @param $toUnit
+     * @return float|int|string
+     */
+    function convert_weight($weight, $fromUnit, $toUnit)
+    {
+        // 定义单位转换系数
+        $conversionFactors = [
+            'mg' => ['g' => 0.001, 'kg' => 0.000001, 't' => 0.000000001],
+            'g'  => ['mg' => 1000, 'kg' => 0.001, 't' => 0.000001],
+            'kg' => ['mg' => 1000000, 'g' => 1000, 't' => 0.001],
+            't'  => ['mg' => 1000000000, 'g' => 1000000, 'kg' => 1000]
+        ];
+
+        // 检查输入单位是否有效
+        if (!isset($conversionFactors[$fromUnit], $conversionFactors[$toUnit])) {
+            return '无效的单位';
+        }
+
+        // 执行转换
+        return $weight * $conversionFactors[$fromUnit][$toUnit];
+    }
+}
+
+if (!function_exists('convert_dimension')) {
+
+    /**
+     * 尺寸单位转换
+     * PHP 尺寸单位转换
+     * 尺寸单位通常涉及长度、宽度、高度等，如厘米、米、英寸等。
+     * 为了进行尺寸单位转换，我们需要定义不同尺寸单位之间的转换关系。以下是一些常见的尺寸单位及其转换关系：
+     * 1 米 (m) = 100 厘米 (cm)
+     * 1 厘米 (cm) = 10 毫米 (mm)
+     * 1 米 (m) = 1000 毫米 (mm)
+     * 1 英尺 (ft) = 12 英寸 (in)
+     * 1 英寸 (in) ≈ 2.54 厘米 (cm)
+     * 1 英尺 (ft) ≈ 30.48 厘米 (cm)
+     * 1 米 (m) ≈ 3.28 英尺 (ft)
+     * 接下来，我们可以编写一个 PHP 函数来实现尺寸单位之间的转换。
+     * 定义转换函数
+     * 我们需要一个函数，该函数接收当前尺寸、当前单位和目标单位，然后返回转换后的尺寸。
+     * 实现转换逻辑
+     * 在函数内部，我们可以使用条件语句或关联数组来处理不同的单位转换。为了代码的清晰和可维护性，建议使用关联数组来存储单位之间的转换系数。
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/1/20 09:54:26
+     * @param $dimension
+     * @param $fromUnit
+     * @param $toUnit
+     * @return float|int|string
+     */
+    function convert_dimension($dimension, $fromUnit, $toUnit)
+    {
+        // 定义单位转换系数
+        $conversionFactors = [
+            'mm' => ['cm' => 0.1, 'm' => 0.001, 'in' => 0.0393701, 'ft' => 0.00328084],
+            'cm' => ['mm' => 10, 'm' => 0.01, 'in' => 0.393701, 'ft' => 0.0328084],
+            'm'  => ['mm' => 1000, 'cm' => 100, 'in' => 39.3701, 'ft' => 3.28084],
+            'in' => ['mm' => 25.4, 'cm' => 2.54, 'm' => 0.0254, 'ft' => 0.0833333],
+            'ft' => ['mm' => 304.8, 'cm' => 30.48, 'm' => 0.3048, 'in' => 12],
+        ];
+
+        // 检查输入单位是否有效
+        if (!isset($conversionFactors[$fromUnit], $conversionFactors[$toUnit])) {
+            return '无效的单位';
+        }
+
+        // 执行转换
+        return $dimension * $conversionFactors[$fromUnit][$toUnit];
+    }
+}
