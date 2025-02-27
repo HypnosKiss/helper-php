@@ -2,6 +2,8 @@
 
 namespace Sweeper\HelperPhp;
 
+use DateInterval;
+use DatePeriod;
 use DateTime;
 use DateTimeZone;
 
@@ -2282,5 +2284,91 @@ if (!function_exists('convert_dimension')) {
 
         // 执行转换
         return $dimension * $conversionFactors[$fromUnit][$toUnit];
+    }
+}
+
+if (!function_exists('only_number')) {
+    /**
+     * 检查字符串是否为纯数字
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/10/8 10:56:24
+     * @param $string
+     * @return bool
+     */
+    function only_number($string): bool
+    {
+        return preg_match('/^\d+$/', $string) === 1;
+    }
+}
+
+if (!function_exists('contains_sunday')) {
+    /**
+     * 检查时间范围内是否包含周日
+     * @param string $startDate 开始日期（格式：Y-m-d）
+     * @param string $endDate   结束日期（格式：Y-m-d）
+     * @return bool 如果包含周日返回 true，否则返回 false
+     * @throws \Exception
+     */
+    function contains_sunday(string $startDate, string $endDate): bool
+    {
+        $start = new DateTime($startDate);
+        $end   = new DateTime($endDate);
+
+        // 确保结束日期包含在内
+        $end->modify('+1 day');
+
+        // 遍历时间范围内的每一天
+        $interval = new DateInterval('P1D');
+        $period   = new DatePeriod($start, $interval, $end);
+
+        foreach ($period as $date) {
+            // 检查是否是周日（周日对应的值是 0）
+            if ($date->format('w') == 0) {
+                return true;
+            }
+        }
+
+        return false;
+
+        // while ($startDate < $endDate) {
+        //     if ($startDate->format('N') == 7) {
+        //         return true; // N 返回的是 ISO-8601 数字格式的星期几，7 代表周日
+        //     }
+        //     $startDate->modify('+1 day');
+        // }
+        //
+        // return false;
+    }
+}
+
+if (!function_exists('add_seconds_excluding_sundays')) {
+    /**
+     * 添加秒数（星期日除外）
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/2/17 10:36:54
+     * @param $dateTimeStr
+     * @param $secondsToAdd
+     * @return string
+     * @throws \Exception
+     */
+    function add_seconds_excluding_sundays($dateTimeStr, $secondsToAdd): string
+    {
+        $dateTime     = new DateTime($dateTimeStr);
+        $totalSeconds = $secondsToAdd;
+
+        while ($totalSeconds > 0) {
+            $dateTime->modify('+1 second');
+            $totalSeconds--;
+
+            // 检查是否是周日
+            if ($dateTime->format('N') == 7) {
+                // 如果是周日，则跳到下周一
+                $dateTime->modify('+1 day');
+                // 由于我们已经跳过了整个周日，所以需要减去周日的秒数
+                // $totalSeconds -= 86400; // 86400秒 = 1天
+            }
+        }
+
+        return $dateTime->format('Y-m-d H:i:s');
     }
 }
