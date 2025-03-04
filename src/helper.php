@@ -2378,15 +2378,17 @@ if (!function_exists('array_key_exists_case_insensitive')) {
      * 数组键是否存在（不区分大小写）
      * Author: Sweeper <wili.lixiang@gmail.com>
      * Time: 2025/3/4 10:05:03
-     * @param $key
-     * @param $array
+     * @param string $key            搜索的键
+     * @param array  $array          要搜索的数组
+     * @param null   $searchKeyIndex 如果找到则返回该索引
      * @return bool
      */
-    function array_key_exists_case_insensitive($key, $array): bool
+    function array_key_exists_case_insensitive(string $key, array $array, &$searchKeyIndex = null): bool
     {
-        $lowerKey  = strtolower($key);
-        $lowerKeys = array_map('strtolower', array_keys($array));
+        $lowerKey       = strtolower($key);
+        $lowerKeys      = array_map('strtolower', array_keys($array));
+        $searchKeyIndex = array_search($lowerKey, $lowerKeys, true);
 
-        return array_search($lowerKey, $lowerKeys, true) !== false;
+        return $searchKeyIndex !== false;
     }
 }
