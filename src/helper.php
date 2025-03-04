@@ -2372,3 +2372,21 @@ if (!function_exists('add_seconds_excluding_sundays')) {
         return $dateTime->format('Y-m-d H:i:s');
     }
 }
+
+if (!function_exists('array_key_exists_case_insensitive')) {
+    /**
+     * 数组键是否存在（不区分大小写）
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/3/4 10:05:03
+     * @param $key
+     * @param $array
+     * @return bool
+     */
+    function array_key_exists_case_insensitive($key, $array): bool
+    {
+        $lowerKey  = strtolower($key);
+        $lowerKeys = array_map('strtolower', array_keys($array));
+
+        return array_search($lowerKey, $lowerKeys, true) !== false;
+    }
+}
