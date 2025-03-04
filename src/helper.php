@@ -2392,3 +2392,24 @@ if (!function_exists('array_key_exists_case_insensitive')) {
         return $searchKeyIndex !== false;
     }
 }
+
+if (!function_exists('array_key_exists_case_insensitive')) {
+    /**
+     * 获取数组值（不区分大小写）
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/3/4 10:55:41
+     * @param string $key
+     * @param array  $array
+     * @return mixed|null
+     */
+    function get_array_value_case_insensitive(string $key, array $array)
+    {
+        $lowerKey       = strtolower($key);
+        $lowerCaseArray = [];
+        foreach ($array as $originalKey => $value) {
+            $lowerCaseArray[strtolower($originalKey)] = $value;
+        }
+
+        return $lowerCaseArray[$lowerKey] ?? null;
+    }
+}
