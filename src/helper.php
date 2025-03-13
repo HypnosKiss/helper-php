@@ -414,7 +414,7 @@ if (!function_exists('html_to_text')) {
         $str       = preg_replace('/\&rdquo/i', '"', $str);
         $allowtags = 'img|font|div|table|tbody|tr|td|th|br|p|b|strong|i|u|em|span|ol|ul|li';
         $str       = preg_replace("/<(\/?($allowtags).*?)>/is", '', $str);
-        $str       = htmlspecialchars($str);
+        $str       = htmlspecialchars($str, ENT_COMPAT | ENT_HTML401);
         $str       = strip_tags($str);
         $str       = html_entity_decode($str, ENT_QUOTES, $encode);
 
@@ -1207,12 +1207,78 @@ if (!function_exists('html2text')) {
         $str       = preg_replace('/\&rdquo/i', '"', $str);
         $allowtags = 'img|font|div|table|tbody|tr|td|th|br|p|b|strong|i|u|em|span|ol|ul|li';
         $str       = preg_replace("/<(\/?($allowtags).*?)>/is", '', $str);
-        $str       = htmlspecialchars($str);
+        $str       = htmlspecialchars($str, ENT_COMPAT | ENT_HTML401);
         $str       = strip_tags($str);
         $str       = html_entity_decode($str, ENT_QUOTES, $encode);
         $str       = preg_replace('/\&\#.*?\;/i', '', $str);
 
         return $str;
+    }
+}
+
+if (!function_exists('get_vue_struct')) {
+    /**
+     * VUE 结构数据
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/3/13 10:15:08
+     * @param array $input
+     * @return array
+     */
+    function get_vue_struct(array $input): array
+    {
+        array_walk($input, static function(&$val, $key) {
+            $val = [
+                'value' => $key,
+                'label' => $val,
+            ];
+        });
+
+        return $input;
+    }
+}
+
+if (!function_exists('format_list_struct')) {
+    /**
+     * 格式化列表通用数据结构
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/3/13 10:21:06
+     * @param array $list
+     * @param int   $total
+     * @param int   $page
+     * @param int   $limit
+     * @param array $params
+     * @return array
+     */
+    function format_list_struct(array $list, int $total = 0, int $page = 1, int $limit = 20, array $params = []): array
+    {
+        return [
+            'list'      => $list,
+            'total'     => $total,
+            'page'      => $page,
+            'limit'     => $limit,
+            'totalPage' => $total && $limit ? (int)ceil($total / $limit) : 0,
+            'sql'       => $params['sql'] ?? '',
+            'countSql'  => $params['countSql'] ?? $params['count_sql'] ?? '',
+            'params'    => $params['request'] ?? $params['params'] ?? $params,
+        ];
+    }
+}
+
+if (!function_exists('response_list_struct')) {
+    /**
+     * 响应列表通用数据结构
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/3/13 10:24:00
+     * @param array $list
+     * @param int   $total
+     * @param int   $page
+     * @param int   $limit
+     * @param array $params
+     * @return false|string
+     */
+    function response_list_struct(array $list, int $total = 0, int $page = 1, int $limit = 20, array $params = [])
+    {
+        return success(format_list_struct($list, $total, $page, $limit, $params));
     }
 }
 
@@ -1649,6 +1715,27 @@ if (!function_exists('format_vue_struct_by_key')) {
     }
 }
 
+if (!function_exists('format_vue_struct')) {
+    /**
+     * 格式化 VUE 结构数据
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/3/13 10:25:33
+     * @param array  $input
+     * @param string $labelKey
+     * @param string $valueKey
+     * @return array
+     */
+    function format_vue_struct(array $input, string $labelKey = '', string $valueKey = 'id'): array
+    {
+        return array_map(static function($val) use ($labelKey, $valueKey) {
+            return [
+                'value' => $val[$valueKey],
+                'label' => $val[$labelKey],
+            ];
+        }, $input);
+    }
+}
+
 if (!function_exists('format_files')) {
     /**
      * 格式化 $_FILES 数据
@@ -1672,6 +1759,64 @@ if (!function_exists('format_files')) {
         }
 
         return $_files = $file_ary;
+    }
+}
+
+if (!function_exists('get_file_url_ext_by_content')) {
+    /**
+     * 通过文件内容获取文件后缀
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/11/7 10:45:34
+     * @param string $url
+     * @param bool   $isContent
+     * @return array [$extension, $isImage]
+     */
+    function get_file_url_ext_by_content(string $url, bool $isContent = false): array
+    {
+        $fileContent = $isContent ? $url : file_get_contents($url);
+        $finfo       = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType    = finfo_buffer($finfo, $fileContent);
+        finfo_close($finfo);
+
+        // 根据 MIME 类型推断扩展名
+        switch ($mimeType) {
+            case 'image/jpeg':
+                $extension = 'jpg';
+                break;
+            case 'image/png':
+                $extension = 'png';
+                break;
+            case 'image/gif':
+                $extension = 'gif';
+                break;
+            case 'image/bmp':
+                $extension = 'bmp';
+                break;
+            case 'image/webp':
+                $extension = 'webp';
+                break;
+            default:
+                $extension = '';// unknown
+        }
+        $isImage = stripos($mimeType, 'image/') === 0;
+
+        return [$extension, $isImage];
+    }
+}
+
+if (!function_exists('remote_file_exists')) {
+    /**
+     * 判断远程文件是否存在
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2024/11/22 11:20:02
+     * @param $url
+     * @return array [$exists, $headers]
+     */
+    function remote_file_exists($url): array
+    {
+        $headers = @get_headers($url, 1);
+
+        return [stripos($headers[0], '200 OK') !== false, $headers];
     }
 }
 
@@ -1759,7 +1904,7 @@ if (!function_exists('json_output')) {
     function json_output(array $data = [], int $code = 1, string $msg = 'Success', int $httpCode = 200, array $headers = ['Content-Type' => 'application/json ; charset=utf-8'], $options = 0)
     {
         // 处理输出数据
-        $_data = json_encode(['code' => $code, 'msg' => $msg, 'data' => $data], $options ?? (JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        $_data = json_encode(['code' => $code, 'msg' => $msg, 'data' => $data], !empty($options) ? $options : (JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
         if (!empty($headers) && !headers_sent()) {
             // 发送状态码
@@ -2393,7 +2538,7 @@ if (!function_exists('array_key_exists_case_insensitive')) {
     }
 }
 
-if (!function_exists('array_key_exists_case_insensitive')) {
+if (!function_exists('get_array_value_case_insensitive')) {
     /**
      * 获取数组值（不区分大小写）
      * Author: Sweeper <wili.lixiang@gmail.com>
