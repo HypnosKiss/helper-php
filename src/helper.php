@@ -2200,22 +2200,6 @@ if (!function_exists('get_class_methods_only')) {
     }
 }
 
-if (!function_exists('remote_file_exists')) {
-    /**
-     * 判断远程文件是否存在
-     * Author: Sweeper <wili.lixiang@gmail.com>
-     * Time: 2024/11/22 11:20:02
-     * @param $url
-     * @return array [$exists, $headers]
-     */
-    function remote_file_exists($url): array
-    {
-        $headers = @get_headers($url, 1);
-
-        return [stripos($headers[0], '200 OK') !== false, $headers];
-    }
-}
-
 if (!function_exists('convert_remote_image_to_format')) {
     /**
      * 将远程图片转换为指定格式
