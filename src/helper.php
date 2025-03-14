@@ -6,6 +6,7 @@ use DateInterval;
 use DatePeriod;
 use DateTime;
 use DateTimeZone;
+use Sweeper\HelperPhp\Tool\RedisClient;
 
 use function Sweeper\HelperPhp\Func\array_clear_empty;
 use function Sweeper\HelperPhp\Func\format_size;
@@ -2540,5 +2541,49 @@ if (!function_exists('get_array_value_case_insensitive')) {
         }
 
         return $lowerCaseArray[$lowerKey] ?? null;
+    }
+}
+
+if (!function_exists('add_filter')) {
+    /**
+     * 添加过滤器 - 过滤重复的未消费数据，消费消息要移除唯一标识
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/3/14 14:47:57
+     * @param string $key
+     * @param string $member
+     * @return bool
+     */
+    function add_filter(string $key = '', string $member = ''): bool
+    {
+        if ($key && $member) {
+            if (RedisClient::instance()->sismember($key, $member)) {// 过滤重复的未消费数据，消费消息要移除唯一标识
+                return false;
+            }
+            if (!RedisClient::instance()->sadd($key, [$member])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+}
+
+if (!function_exists('del_filter')) {
+    /**
+     * 移除过滤器 - 过滤重复的未消费数据，消费消息要移除唯一标识
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/3/14 14:49:36
+     * @param string $key
+     * @param string $member
+     * @return bool
+     */
+    function del_filter(string $key = '', string $member = ''): bool
+    {
+        if ($key && $member) {
+            return RedisClient::instance()->srem($key, $member);
+        }
+
+        return false;
     }
 }
