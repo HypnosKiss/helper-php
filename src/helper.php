@@ -2049,6 +2049,46 @@ if (!function_exists('cartesian_product')) {
     }
 }
 
+if (!function_exists('cartesian_recursive')) {
+    /**
+     * 递归生成笛卡尔积
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/4/25 16:33:45
+     * @param $arrays
+     * @return array
+     */
+    function cartesian_recursive($arrays): array
+    {
+        $result = [];
+
+        // Helper function to build the cartesian product
+        function build_product($arrays, $index, &$result, &$current)
+        {
+            if ($index === count($arrays)) {
+                // If we have reached the end of the arrays, add the current combination to the result
+                $result[] = $current;
+            } else {
+                // Iterate over the current array
+                foreach ($arrays[$index] as $value) {
+                    // Add the current value to the combination
+                    $current[] = $value;
+                    // Recurse into the next array
+                    build_product($arrays, $index + 1, $result, $current);
+                    // Remove the last added value after recursing
+                    array_pop($current);
+                }
+            }
+        }
+
+        // Initialize the current combination array
+        $current = [];
+        // Start the recursion
+        build_product($arrays, 0, $result, $current);
+
+        return $result;
+    }
+}
+
 if (!function_exists('extract_array_by_xpath')) {
     /**
      * 从数组中提取指定XPath路径的数据
@@ -2585,5 +2625,120 @@ if (!function_exists('del_filter')) {
         }
 
         return false;
+    }
+}
+
+if (!function_exists('cartesian')) {
+    /**
+     * 笛卡尔积运算
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/4/25 16:11:05
+     * @param        $arr
+     * @param string $returnType
+     * @param string $glue
+     * @return array|mixed
+     */
+    function cartesian($arr, string $returnType = 'array', string $glue = ',')
+    {
+        $result = [];
+        if (!empty($arr)) {
+            $result = array_shift($arr);
+            foreach ($arr as $arr2) {
+                $arr1   = $result;
+                $result = [];
+                foreach ($arr1 as $v) {
+                    foreach ($arr2 as $v2) {
+                        switch ($returnType) {
+                            case 'array':
+                                !is_array($v) && $v = [$v];
+                                !is_array($v2) && $v2 = [$v2];
+                                $result[] = array_merge_recursive($v, $v2);
+                                break;
+                            case 'string':
+                                $result[] = $v . $glue . $v2;
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+}
+
+if (!function_exists('simplode')) {
+    /**
+     * 数组转字符串
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/4/25 16:24:51
+     * @param $ids
+     * @return string
+     */
+    function simplode($ids): string
+    {
+        return "'" . implode("','", $ids) . "'";
+    }
+}
+
+if (!function_exists('get_serial_words')) {
+    /**
+     * 获取字符串内连续的单词组合(包含单个单词和字符串本身)
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/4/25 16:24:00
+     * @param string $str
+     * @param string $glue
+     * @param string $glue2
+     * @return array
+     */
+    function get_serial_words(string $str, string $glue = ',', string $glue2 = ','): array
+    {
+        $words_arr = explode($glue, $str);
+        $words_arr = array_filter($words_arr); //去空
+        $words_arr = array_values($words_arr); //连续键名
+
+        //方案1: 字符串拼接,4项的数组共循环10次,执行100W次2s
+        $str_arr = [];
+        //1、外层循环开始取值的位置
+        for ($p = 0; $p <= count($words_arr) - 1; $p++) {
+            $str_arr[] = $pre = $words_arr[$p];
+
+            //2、再依次取后面的各项值,追加到原值上
+            for ($i = $p + 1; $i <= count($words_arr) - 1; $i++) {
+                $str_arr[] = $pre .= $glue2 . $words_arr[$i];
+            }
+        }
+
+        return $str_arr;
+    }
+}
+
+if (!function_exists('array_to_string_recursive')) {
+    /**
+     * 数组转字符串(递归)
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/4/25 17:55:56
+     * @param        $array
+     * @param string $prefix
+     * @return string
+     */
+    function array_to_string_recursive($array, string $prefix = ''): string
+    {
+        $string = '';
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $string .= array_to_string_recursive($value, $prefix . $key . '[');
+            } else {
+                $string .= $prefix . $key . '=>' . $value . ', ';
+            }
+        }
+        // 移除最后一个逗号和空格
+        $string = rtrim($string, ', ');
+        // 如果数组不是最外层的，则添加闭合括号
+        if ($prefix) {
+            $string = rtrim($string, '[') . ']';
+        }
+
+        return $string;
     }
 }
