@@ -2718,25 +2718,64 @@ if (!function_exists('array_to_string_recursive')) {
      * 数组转字符串(递归)
      * Author: Sweeper <wili.lixiang@gmail.com>
      * Time: 2025/4/25 17:55:56
-     * @param        $array
+     * @param array  $array
      * @param string $prefix
+     * @param bool   $includeKeys
      * @return string
      */
-    function array_to_string_recursive($array, string $prefix = ''): string
+    function array_to_string_recursive(array $array, string $prefix = '', bool $includeKeys = true): string
     {
         $string = '';
         foreach ($array as $key => $value) {
             if (is_array($value)) {
-                $string .= array_to_string_recursive($value, $prefix . $key . '[');
+                $string .= array_to_string_recursive($value, $prefix . ($includeKeys ? $key . '[' : ''), $includeKeys);
             } else {
-                $string .= $prefix . $key . '=>' . $value . ', ';
+                $string .= ($includeKeys ? $prefix . $key . '=>' : '') . $value . ', ';
             }
         }
         // 移除最后一个逗号和空格
         $string = rtrim($string, ', ');
         // 如果数组不是最外层的，则添加闭合括号
-        if ($prefix) {
+        if ($prefix && $includeKeys) {
             $string = rtrim($string, '[') . ']';
+        }
+
+        return $string;
+    }
+}
+
+if (!function_exists('array_to_string_print')) {
+    /**
+     * 数组转字符串(美化打印)
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/4/25 18:17:53
+     * @param array  $array
+     * @param int    $indent
+     * @param string $prefix
+     * @return string
+     */
+    function array_to_string_print(array $array, int $indent = 0, string $prefix = ''): string
+    {
+        $string = '';
+        foreach ($array as $key => $value) {
+            // 增加缩进
+            $string .= str_repeat(' ', $indent * 4) . $prefix . $key . ' => ';
+
+            // 如果是数组，则递归调用
+            if (is_array($value)) {
+                $string .= "\n" . array_to_string_print($value, $indent + 1, '');
+            } else {
+                // 对于非数组值，直接转换为字符串并添加引号
+                $string .= '"' . var_export($value, true) . '",';
+            }
+
+            // 添加换行符以便于阅读
+            $string .= "\n";
+        }
+
+        // 移除最后一个换行符（如果存在）
+        if (!empty($string)) {
+            $string = rtrim($string, "\n");
         }
 
         return $string;
