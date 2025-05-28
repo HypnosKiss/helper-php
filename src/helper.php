@@ -2781,3 +2781,205 @@ if (!function_exists('array_to_string_print')) {
         return $string;
     }
 }
+
+if (!function_exists('parse_links')) {
+    /**
+     * 解析链接
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/5/14 14:41:08
+     * @param $content
+     * @return array
+     */
+    function parse_links($content): array
+    {
+        // 匹配URL的正则表达式
+        // $pattern = '/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,8}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/i';
+        $pattern = '/^https?:\/\/(?:www\.)?([-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9]{1,63}|(\d{1,3}\.){3}\d{1,3})(:\d+)?(\/[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)?$/i';
+
+        preg_match_all($pattern, $content, $matches);
+
+        if (empty($matches[0])) {
+            return [];
+        }
+
+        // 去重并返回
+        return array_unique($matches[0]);
+    }
+}
+
+if (!function_exists('distribute_evenly')) {
+    /**
+     * 均匀分配
+     * 分配元素到指定数量的组中，并尽可能保持每个组元素数量相等
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/5/28 16:34:56
+     * @param $items
+     * @param $numGroups
+     * @return array
+     */
+    function distribute_evenly($items, $numGroups): array
+    {
+        // 计算每个组应该有多少元素
+        $numItems      = count($items);                 // 计算元素总数
+        $itemsPerGroup = floor($numItems / $numGroups); // 计算每个组应该有多少元素，向下取整
+        $remainder     = $numItems % $numGroups;        // 计算余数，用于分配给前面的组
+
+        // 初始化结果数组
+        $result = array_fill(0, $numGroups, []);        // 创建一个包含 $numGroups 个空数组的数组
+
+        $index = 0;
+        for ($i = 0; $i < $numGroups; $i++) {
+            // 每个组分配 $itemsPerGroup 个元素
+            for ($j = 0; $j < $itemsPerGroup; $j++) {
+                $result[$i][] = $items[$index++];
+            }
+            // 如果还有剩余的元素，分配给前面的组
+            if ($remainder > 0) {
+                $result[$i][] = $items[$index++];
+                $remainder--;
+            }
+        }
+
+        return $result;
+    }
+}
+
+if (!function_exists('distribute_evenly_data')) {
+    /**
+     * 均匀分配数据
+     * 将数据均匀分配到指定数量的组中
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/5/28 16:34:31
+     * @param array $data
+     * @param int   $groups
+     * @return array
+     */
+    function distribute_evenly_data(array &$data, int $groups): array
+    {
+        // 异常处理
+        if ($groups <= 0 || empty($data)) {
+            return [];
+        }
+
+        // 初始化分组容器
+        $result = array_fill(0, $groups, []);
+
+        // 采用轮询分配策略
+        foreach ($data as $index => &$item) {
+            $result[$index % $groups][] = &$item;  // 通过取模运算轮询分配
+        }
+
+        return $result;
+    }
+}
+
+if (!function_exists('distribute_data_evenly')) {
+    /**
+     * 多维数据平均分配算法
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/5/28 16:46:18
+     * @param array  $data     要分配的数据
+     * @param int    $groups   分组数量
+     * @param string $strategy 分配策略：round_robin(轮询), chunk(分块), weighted(加权)
+     * @return array
+     */
+    function distribute_data_evenly(array $data, int $groups, string $strategy = 'round_robin'): array
+    {
+        if (empty($data) || $groups <= 0) {
+            return [];
+        }
+        switch ($strategy) {
+            case 'chunk':
+                return chunk_distribute($data, $groups);
+            case 'weighted':
+                return weighted_distribute($data, $groups);
+            case 'round_robin':
+            default:
+                return round_robin_distribute($data, $groups);
+        }
+    }
+}
+
+if (!function_exists('round_robin_distribute')) {
+    /**
+     * 轮询分配策略 - 最均匀的分配方式
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/5/28 16:47:44
+     * @param array $data
+     * @param int   $groups
+     * @return array
+     */
+    function round_robin_distribute(array $data, int $groups): array
+    {
+        $result = array_fill(0, $groups, []);
+        foreach ($data as $index => $item) {
+            $result[$index % $groups][] = $item;
+        }
+
+        return $result;
+    }
+}
+
+if (!function_exists('chunk_distribute')) {
+    /**
+     * 分块分配策略 - 连续数据分块
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/5/28 16:47:52
+     * @param array $data
+     * @param int   $groups
+     * @return array
+     */
+    function chunk_distribute(array $data, int $groups): array
+    {
+        $totalCount = count($data);
+        $baseSize   = (int)($totalCount / $groups);
+        $remainder  = $totalCount % $groups;
+
+        $result = [];
+        $offset = 0;
+
+        for ($i = 0; $i < $groups; $i++) {
+            $currentSize = $baseSize + ($i < $remainder ? 1 : 0);
+            $result[$i]  = array_slice($data, $offset, $currentSize);
+            $offset      += $currentSize;
+        }
+
+        return $result;
+    }
+}
+
+if (!function_exists('weighted_distribute')) {
+    /**
+     * 加权分配策略 - 根据权重分配
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/5/28 16:48:04
+     * @param array $data
+     * @param int   $groups
+     * @param array $weights 权重数组，如果不提供则使用平均权重
+     * @return array
+     */
+    function weighted_distribute(array $data, int $groups, array $weights = []): array
+    {
+        if (empty($weights)) {
+            // 如果没有提供权重，使用平均权重
+            $weights = array_fill(0, $groups, 1);
+        }
+
+        $totalWeight = array_sum($weights);
+        $totalCount  = count($data);
+        $result      = array_fill(0, $groups, []);
+
+        $allocated = 0;
+        for ($i = 0; $i < $groups - 1; $i++) {
+            $groupSize  = (int)(($weights[$i] / $totalWeight) * $totalCount);
+            $result[$i] = array_slice($data, $allocated, $groupSize);
+            $allocated  += $groupSize;
+        }
+
+        // 最后一组分配剩余的所有数据
+        $result[$groups - 1] = array_slice($data, $allocated);
+
+        return $result;
+    }
+}
+
