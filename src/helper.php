@@ -2983,3 +2983,43 @@ if (!function_exists('weighted_distribute')) {
     }
 }
 
+if (!function_exists('convert_to_array')) {
+    /**
+     * 转换为数组
+     * @param array|string $input       输入数据
+     * @param array        $search      数组或字符串，用于替换分隔符等字符
+     * @param string       $replace     替换字符，默认为逗号
+     * @param bool         $arrayFilter 是否过滤数组，默认为 true
+     * @param bool         $keep        是否保持数组键名，默认为 true
+     * @param bool         $filter      是否过滤空值，默认为 true
+     * @return array
+     */
+    function convert_to_array($input, array $search = [PHP_EOL, "\r", "\n", "\r\n", '；', ';', ' ', '，'], string $replace = ',', bool $arrayFilter = true, bool $keep = true, bool $filter = true): array
+    {
+        $array = [];
+        if (is_array($input)) {
+            $array = $input; // 数组直接返回
+        } else if (is_string($input) && $input !== '') {
+            $tmp_arr = explode($replace, str_replace($search, $replace, $input));
+            if ($arrayFilter) {
+                $array = array_unique(array_filter($tmp_arr));
+            } else {
+                foreach ($tmp_arr as $v) {
+                    $v = trim($v);
+                    if ($filter && $v === '') {
+                        continue;
+                    }
+                    $array[] = $v;
+                }
+            }
+        } else if (empty($input) && !$filter) {
+            $array = [''];
+        }
+
+        if (!$keep) {
+            $array = array_values($array);
+        }
+
+        return $array;
+    }
+}
