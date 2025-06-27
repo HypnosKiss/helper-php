@@ -9,6 +9,7 @@ use DateTimeZone;
 use Sweeper\HelperPhp\Tool\RedisClient;
 
 use function Sweeper\HelperPhp\Func\array_clear_empty;
+use function Sweeper\HelperPhp\Func\array_group;
 use function Sweeper\HelperPhp\Func\format_size;
 use function Sweeper\HelperPhp\Func\resolve_size;
 use function Sweeper\HelperPhp\Func\time_range_v;
@@ -3021,5 +3022,58 @@ if (!function_exists('convert_to_array')) {
         }
 
         return $array;
+    }
+}
+
+if (!function_exists('array_convert_subtree')) {
+    function array_convert_subtree($parent_id, array $all, array $opt = [], int $level = 0): array
+    {
+        $opt          = array_merge([
+            'return_as_tree' => false,       // 以目录树返回，还是以平铺数组形式返回
+            'level_key'      => 'tree_level',// 返回数据中是否追加等级信息,如果选项为空, 则不追加等级信息
+            'id_key'         => 'id',        // 主键键名
+            'parent_id_key'  => 'parent_id', // 父级键名
+            'children_key'   => 'children'   // 返回子集key(如果是平铺方式返回,该选项无效
+        ], $opt);
+        $idKey        = $opt['id_key'];
+        $parentIdKey  = $opt['parent_id_key'];
+        $levelKey     = $opt['level_key'];
+        $childrenKey  = $opt['children_key'];
+        $returnAsTree = $opt['return_as_tree'];
+
+        // 预处理建立映射关系
+        $map = array_group($all, $parentIdKey);
+
+        // 递归构建树
+        $buildTree = function($pid, $level) use (&$buildTree, $map, $idKey, $levelKey, $childrenKey, $returnAsTree) {
+            $result = [];
+            if (!isset($map[$pid])) {
+                return $result;
+            }
+
+            foreach ($map[$pid] as $item) {
+                $item[$levelKey] = $level;
+                if (!$returnAsTree) {
+                    $result[] = $item;
+                }
+                if (isset($item[$idKey])) {
+                    $sub = $buildTree($item[$idKey], $level + 1);
+                    if (!empty($sub)) {
+                        if ($returnAsTree) {
+                            $item[$childrenKey] = $sub;
+                        } else {
+                            $result = array_merge($result, $sub);
+                        }
+                    }
+                }
+                if ($returnAsTree) {
+                    $result[] = $item;
+                }
+            }
+
+            return $result;
+        };
+
+        return $buildTree($parent_id, $level);
     }
 }
