@@ -2564,16 +2564,36 @@ if (!function_exists('array_key_exists_case_insensitive')) {
     }
 }
 
-if (!function_exists('get_array_value_case_insensitive')) {
+if (!function_exists('array_value_exists_case_insensitive')) {
     /**
-     * 获取数组值（不区分大小写）
+     * 数组值是否存在（不区分大小写）
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/3/4 10:05:03
+     * @param string $value            搜索的值
+     * @param array  $array            要搜索的数组
+     * @param null   $searchValueIndex 搜索到的值对应的索引
+     * @return bool
+     */
+    function array_value_exists_case_insensitive(string $value, array $array, &$searchValueIndex = null): bool
+    {
+        $lowerValue       = strtolower($value);
+        $lowerValues      = array_map('strtolower', $array);
+        $searchValueIndex = array_search($lowerValue, $lowerValues, true);
+
+        return $searchValueIndex !== false;
+    }
+}
+
+if (!function_exists('get_array_key_case_insensitive')) {
+    /**
+     * 获取数组key的值（不区分大小写）
      * Author: Sweeper <wili.lixiang@gmail.com>
      * Time: 2025/3/4 10:55:41
      * @param string $key
      * @param array  $array
      * @return mixed|null
      */
-    function get_array_value_case_insensitive(string $key, array $array)
+    function get_array_key_case_insensitive(string $key, array $array)
     {
         $lowerKey       = strtolower($key);
         $lowerCaseArray = [];
@@ -2582,6 +2602,25 @@ if (!function_exists('get_array_value_case_insensitive')) {
         }
 
         return $lowerCaseArray[$lowerKey] ?? null;
+    }
+}
+
+if (!function_exists('get_array_value_case_insensitive')) {
+    /**
+     * 获取数组值（不区分大小写）
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/3/4 10:55:41
+     * @param string $value
+     * @param array  $array
+     * @return mixed|null
+     */
+    function get_array_value_case_insensitive(string $value, array $array)
+    {
+        $lowerValue       = strtolower($value);
+        $lowerValues      = array_map('strtolower', $array);
+        $searchValueIndex = array_search($lowerValue, $lowerValues, true);
+
+        return $searchValueIndex !== false ? $lowerValues[$searchValueIndex] : null;
     }
 }
 
@@ -3075,5 +3114,134 @@ if (!function_exists('array_convert_subtree')) {
         };
 
         return $buildTree($parent_id, $level);
+    }
+}
+
+if (!function_exists('super_trim')) {
+    /**
+     * 去除字符串前后空格
+     * Author: Sweeper <wili.lixiang@gmail.com>
+     * Time: 2025/7/17 09:34:16
+     * @param string|null $string
+     * @param string      $charList
+     * @return string
+     */
+    function super_trim(?string $string = '', string $charList = " \t\n\r\0\x0B 　&nbsp;"): string
+    {
+        if (is_null($string)) {
+            return '';
+        }
+
+        return trim($string, $charList);
+    }
+}
+
+if (!function_exists('extract_image_urls_from_description')) {
+    /**
+     * 从HTML描述中提取所有图片链接
+     *
+     * @param string $description HTML描述内容
+     * @return array 图片链接数组
+     */
+    function extract_image_urls_from_description(string $description): array
+    {
+        $imageUrls = [];
+
+        // 使用正则表达式匹配<img>标签中的src属性
+        $pattern = '/<img[^>]+src\s*=\s*["\']?([^"\'\s>]+)["\']?[^>]*>/i';
+        preg_match_all($pattern, $description, $matches);
+
+        if (!empty($matches[1])) {
+            foreach ($matches[1] as $url) {
+                // 过滤掉base64编码的图片
+                if (strpos($url, 'data:image') === 0) {
+                    continue;
+                }
+
+                // 处理相对路径和绝对路径
+                if (strpos($url, 'http') === 0) {
+                    // 已经是完整URL
+                    $imageUrls[] = $url;
+                } elseif (strpos($url, '//') === 0) {
+                    // 协议相对URL
+                    $imageUrls[] = 'http:' . $url;
+                } elseif (strpos($url, '/') === 0) {
+                    // 相对路径，需要补充域名（这里需要根据实际项目配置处理）
+                    // 在您的项目中可能需要从配置中获取域名
+                    $imageUrls[] = $url;
+                } else {
+                    // 相对路径
+                    $imageUrls[] = $url;
+                }
+            }
+        }
+
+        // 去重
+        return array_unique($imageUrls);
+    }
+}
+
+if (!function_exists('extract_image_urls_from_description_with_host')) {
+    /**
+     * 从HTML描述中提取所有图片链接并补全域名
+     *
+     * @param string $description HTML描述内容
+     * @param string $host        域名前缀
+     * @return array 图片链接数组
+     */
+    function extract_image_urls_from_description_with_host(string $description, string $host = ''): array
+    {
+        $imageUrls = extract_image_urls_from_description($description);
+
+        if (!empty($host)) {
+            foreach ($imageUrls as &$url) {
+                // 如果URL不是完整的链接，则补充域名
+                if (strpos($url, 'http') !== 0) {
+                    // 清理host末尾的斜杠
+                    $host = rtrim($host, '/');
+                    // 清理URL开头的斜杠
+                    $url = ltrim($url, '/');
+                    $url = $host . '/' . $url;
+                }
+            }
+        }
+
+        return $imageUrls;
+    }
+}
+
+if (!function_exists('ms_to_date')) {
+    /**
+     * 将毫秒时间戳转换为日期时间字符串
+     * Author: Somnus <wili.lixiang@gmail.com>
+     * Time: 2025/10/16 17:42:00
+     * @param $ms
+     * @return string
+     */
+    function ms_to_date($ms): string
+    {
+        $sec = (int)($ms / 1000);
+        $ms  %= 1000;
+
+        return date('Y-m-d H:i:s', $sec) . sprintf('.%03d', $ms);
+    }
+}
+
+if (!function_exists('get_microtime_format')) {
+    // 将毫秒时间戳转换为日期格式
+    function get_microtime_format($time)
+    {
+        strlen($time) > 10 && $time /= 1000;
+        if (strstr($time, '.')) {
+            sprintf('%01.3f', $time); // 小数点，不足三位补0
+            [$usec, $sec] = explode('.', $time);
+            $sec = str_pad($sec, 3, '0', STR_PAD_RIGHT); // 不足3位，右边补0
+        } else {
+            $usec = $time;
+            $sec  = '000';
+        }
+        $date = date('Y-m-d H:i:s.x', $usec);
+
+        return str_replace('x', $sec, $date);
     }
 }
