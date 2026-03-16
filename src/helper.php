@@ -3139,16 +3139,16 @@ if (!function_exists('super_trim')) {
      * Author: Sweeper <wili.lixiang@gmail.com>
      * Time: 2025/7/17 09:34:16
      * @param string|null $string
-     * @param string      $charList
+     * @param string      $charList " \t\n\r\0\x0B 　&nbsp;"
      * @return string
      */
-    function super_trim(?string $string = '', string $charList = " \t\n\r\0\x0B 　&nbsp;"): string
+    function super_trim(?string $string = '', string $charList = " \t\n\r\0\x0B"): string
     {
         if (is_null($string)) {
             return '';
         }
 
-        // 清理 NBSP 等特殊字符 (根据您的经验)
+        // 清理 NBSP 等特殊字符
         $string = str_replace(
             ["\xC2\xA0", ' ', ' '],   // NBSP 的不同表示
             ' ',                      // 普通空格
