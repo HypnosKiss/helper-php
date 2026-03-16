@@ -459,6 +459,22 @@ if (!function_exists('include_chinese')) {
     }
 }
 
+if (!function_exists('extract_chinese')) {
+    /**
+     * 提取所有中文字符
+     * Author: Somnus <wili.lixiang@gmail.com>
+     * Time: 2026/3/16 17:09:30
+     * @param string $str
+     * @return array
+     */
+    function extract_chinese(string $str): array
+    {
+        preg_match_all('/[\x{4e00}-\x{9fa5}]+/u', $str, $matches);
+
+        return $matches[0] ?? [];
+    }
+}
+
 if (!function_exists('array_unset_by_key')) {
     /**
      * 根据数组KEY,删除数组
@@ -874,13 +890,13 @@ if (!function_exists('xml_to_array')) {
 if (!function_exists('trim_array')) {
 
     //数组去空格
-    function trim_array($Input)
+    function trim_array($input)
     {
-        if (!is_array($Input)) {
-            return trim($Input);
+        if (!is_array($input)) {
+            return trim($input);
         }
 
-        return array_map('trim_array', $Input);
+        return array_map('trim_array', $input);
     }
 }
 
@@ -1136,7 +1152,7 @@ if (!function_exists('generate_robot_webhook_url')) {
     {
         ['timestamp' => $timestamp, 'sign' => $sign] = generate_dingtalk_sign($signSecret);
 
-        return "https://oapi.dingtalk.com/robot/send?access_token=$accessToken&timestamp={$timestamp}&sign={$sign}";
+        return "https://oapi.dingtalk.com/robot/send?access_token=$accessToken&timestamp=$timestamp&sign=$sign";
     }
 }
 
@@ -3132,6 +3148,13 @@ if (!function_exists('super_trim')) {
             return '';
         }
 
+        // 清理 NBSP 等特殊字符 (根据您的经验)
+        $string = str_replace(
+            ["\xC2\xA0", ' ', ' '],   // NBSP 的不同表示
+            ' ',                      // 普通空格
+            $string
+        );
+
         return trim($string, $charList);
     }
 }
@@ -3243,5 +3266,39 @@ if (!function_exists('get_microtime_format')) {
         $date = date('Y-m-d H:i:s.x', $usec);
 
         return str_replace('x', $sec, $date);
+    }
+}
+
+if (!function_exists('merge_array_duplicate_field_values')) {
+
+    /**
+     * 合并数组重复字段的值
+     * Author: Somnus <wili.lixiang@gmail.com>
+     * Time: 2026/1/20 11:27:37
+     * @param array  $array
+     * @param string $labelKey
+     * @param string $valueKey
+     * @return array
+     */
+    function merge_array_duplicate_field_values(array $array, string $labelKey = 'label', string $valueKey = 'value'): array
+    {
+        $result = [];
+        foreach ($array as $arr) {
+            $label = $arr[$labelKey] ?? 'default';
+            $value = $arr[$valueKey] ?? '';
+            if (!$value) {
+                continue;
+            }
+            if (!empty($result[$label])) {
+                $result[$label][$valueKey] .= ',' . $value;
+            } else {
+                $result[$label] = [
+                    $labelKey => $label,
+                    $valueKey => $value,
+                ];
+            }
+        }
+
+        return array_values($result);
     }
 }
